@@ -453,6 +453,12 @@ public class LexAn {
                     }
                 }
             }
+            /** neznani simbol */
+            else {
+                this.setPosition(buffer.length());
+                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                Report.error(position, "Unkown character: " + buffer);
+            }
 
             if (s != null) {
                 this.updatePosition();
