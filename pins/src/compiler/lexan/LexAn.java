@@ -54,6 +54,7 @@ public class LexAn {
 
         } catch (FileNotFoundException e) {
             System.out.println(e);
+            System.exit(1);
         }
 
         begLine = 1;
