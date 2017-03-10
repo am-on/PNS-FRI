@@ -421,12 +421,19 @@ public class LexAn {
                         this.setStringPosition(buffer);
                         position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                         s = new Symbol(Token.STR_CONST, buffer, position);
+                    }else if (this.next.charAt(0) < 32 || this.next.charAt(0) > 126) {
+                        this.setPosition(buffer.length());
+                        position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                        if(this.next.charAt(0) == 9 || this.next.charAt(0) == 10 || this.next.charAt(0) == 13) {
+                            Report.error(position, "Unclosed string const.");
+                        }
+                        this.updatePosition();
+                        Report.error(position, "Invalid char \'" + this.next + "\' " + "in string const.");
                     }
                 } else {
-                    this.setStringPosition(buffer);
+                    this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
-                    Report.error(position, "String ni zakljucen!");
-                    System.exit(1);
+                    Report.error(position, "Unclosed string const. Expected ', got: EOF");
                 }
             }
             /** identifier */
