@@ -349,6 +349,42 @@ public class LexAn {
                 position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                 s = new Symbol(Token.KW_WHILE, buffer, position);
             }
+            /** ime atomarnega podatkovnega tipa logical */
+            else if (buffer.equals("logical")) {
+                if (this.scn.hasNext()) {
+                    this.next = this.scn.next();
+                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                        continue;
+                    }
+                }
+                this.setPosition(buffer.length());
+                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                s = new Symbol(Token.LOGICAL, buffer, position);
+            }
+            /** ime atomarnega podatkovnega tipa integer */
+            else if (buffer.equals("integer")) {
+                if (this.scn.hasNext()) {
+                    this.next = this.scn.next();
+                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                        continue;
+                    }
+                }
+                this.setPosition(buffer.length());
+                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                s = new Symbol(Token.INTEGER, buffer, position);
+            }
+            /** ime atomarnega podatkovnega tipa string */
+            else if (buffer.equals("integer")) {
+                if (this.scn.hasNext()) {
+                    this.next = this.scn.next();
+                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                        continue;
+                    }
+                }
+                this.setPosition(buffer.length());
+                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                s = new Symbol(Token.STRING, buffer, position);
+            }
             /** tip logical (true, false) */
             else if (buffer.equals("true") || buffer.equals("false")) {
                 if (this.scn.hasNext()) {
