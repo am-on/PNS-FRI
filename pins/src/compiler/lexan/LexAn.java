@@ -444,6 +444,15 @@ public class LexAn {
                     s = new Symbol(Token.IDENTIFIER, buffer, position);
                 }
             }
+            /** komentar # */
+            else if (buffer.charAt(0) == 35) {
+                if(this.scn.hasNext()) {
+                    this.next = scn.next();
+                    if(this.next.charAt(0) == 10 || this.next.charAt(0) == 13) {
+                        buffer = "";
+                    }
+                }
+            }
 
             if (s != null) {
                 this.updatePosition();
