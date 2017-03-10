@@ -25,7 +25,7 @@ public class LexAn {
     private Scanner scn;
 
     /**
-     * track position
+     * Trenutna pozicija
      */
     private int begLine;
     private int begColumn;
@@ -34,7 +34,7 @@ public class LexAn {
 
 
     /**
-     * Buffer for storing next value
+     * Hranjenje naslednjega znaka iz datoteke
      */
     private String next;
 
@@ -76,7 +76,6 @@ public class LexAn {
 
             while (scn.hasNext() || this.next.length() > 0) {
 
-
                 if (this.next.length() > 0) {
                     buffer += this.next;
                     this.next = "";
@@ -92,7 +91,7 @@ public class LexAn {
                     this.newLine();
                     buffer = "";
                 }
-                /** space and tab */
+                /** space in tab */
                 else if (buffer.equals((char) 9 + "") || buffer.equals((char) 32 + "")) {
                     this.updatePosition();
                     buffer = "";
@@ -125,7 +124,7 @@ public class LexAn {
                 else if (buffer.equals("|")) {
                     s = new Symbol(Token.IOR, buffer, position);
                 }
-                /** ! and != operator */
+                /** ! in != operator */
                 // TODO: separate ! and != ?
                 else if (buffer.equals("!")) {
                     if (this.scn.hasNext()) {
@@ -142,7 +141,7 @@ public class LexAn {
                     }
 
                 }
-                /** = and == operator */
+                /** = in == operator */
                 // TODO: separate = and == ?
                 else if (buffer.equals("=")) {
                     if (this.scn.hasNext()) {
@@ -158,7 +157,7 @@ public class LexAn {
                         s = new Symbol(Token.ASSIGN, buffer, position);
                     }
                 }
-                /** < and <= operator */
+                /** < in <= operator */
                 // TODO: separate < and <= ?
                 else if (buffer.equals("<")) {
                     if (this.scn.hasNext()) {
@@ -174,7 +173,7 @@ public class LexAn {
                         s = new Symbol(Token.LTH, buffer, position);
                     }
                 }
-                /** > and => operator */
+                /** > in => operator */
                 // TODO: separate = and == ?
                 else if (buffer.equals(">")) {
                     if (this.scn.hasNext()) {
@@ -189,27 +188,49 @@ public class LexAn {
                     } else {
                         s = new Symbol(Token.GTH, buffer, position);
                     }
-                } else if (buffer.equals("(")) {
+                }
+                /** levi oklepaj */
+                else if (buffer.equals("(")) {
                     s = new Symbol(Token.LPARENT, buffer, position);
-                } else if (buffer.equals(")")) {
+                }
+                /** desni oklepaj */
+                else if (buffer.equals(")")) {
                     s = new Symbol(Token.RPARENT, buffer, position);
-                } else if (buffer.equals("[")) {
+                }
+                /** levi oglati oklepaj */
+                else if (buffer.equals("[")) {
                     s = new Symbol(Token.LBRACKET, buffer, position);
-                } else if (buffer.equals("]")) {
+                }
+                /** desni oglati oklepaj */
+                else if (buffer.equals("]")) {
                     s = new Symbol(Token.RBRACKET, buffer, position);
-                } else if (buffer.equals("{")) {
+                }
+                /** levi zaviti oklepaj */
+                else if (buffer.equals("{")) {
                     s = new Symbol(Token.LBRACE, buffer, position);
-                } else if (buffer.equals("}")) {
+                }
+                /** desni zaviti oklepaj */
+                else if (buffer.equals("}")) {
                     s = new Symbol(Token.RBRACE, buffer, position);
-                } else if (buffer.equals(":")) {
+                }
+                /** dvopicje */
+                else if (buffer.equals(":")) {
                     s = new Symbol(Token.COLON, buffer, position);
-                } else if (buffer.equals(";")) {
+                }
+                /** podpicje */
+                else if (buffer.equals(";")) {
                     s = new Symbol(Token.SEMIC, buffer, position);
-                } else if (buffer.equals(".")) {
+                }
+                /** pika */
+                else if (buffer.equals(".")) {
                     s = new Symbol(Token.DOT, buffer, position);
-                } else if (buffer.equals(",")) {
+                }
+                /** vejica */
+                else if (buffer.equals(",")) {
                     s = new Symbol(Token.COMMA, buffer, position);
-                } else if (buffer.equals("arr")) {
+                }
+                /** kljucna beseda arr */
+                else if (buffer.equals("arr")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.matches("[a-zA-Z0-9_]")) {
@@ -219,7 +240,9 @@ public class LexAn {
                     this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.KW_ARR, buffer, position);
-                } else if (buffer.equals("else")) {
+                }
+                /** kljucna beseda else */
+                else if (buffer.equals("else")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.matches("[a-zA-Z0-9_]")) {
@@ -229,7 +252,9 @@ public class LexAn {
                     this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.KW_ELSE, buffer, position);
-                } else if (buffer.equals("for")) {
+                }
+                /** kljucna beseda for */
+                else if (buffer.equals("for")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.matches("[a-zA-Z0-9_]")) {
@@ -239,7 +264,9 @@ public class LexAn {
                     this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.KW_FOR, buffer, position);
-                } else if (buffer.equals("fun")) {
+                }
+                /** kljucna beseda fun */
+                else if (buffer.equals("fun")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.matches("[a-zA-Z0-9_]")) {
@@ -249,7 +276,9 @@ public class LexAn {
                     this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.KW_FUN, buffer, position);
-                } else if (buffer.equals("if")) {
+                }
+                /** kljucna beseda if */
+                else if (buffer.equals("if")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.matches("[a-zA-Z0-9_]")) {
@@ -259,7 +288,9 @@ public class LexAn {
                     this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.KW_IF, buffer, position);
-                } else if (buffer.equals("then")) {
+                }
+                /** kljucna beseda then */
+                else if (buffer.equals("then")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.matches("[a-zA-Z0-9_]")) {
@@ -269,7 +300,9 @@ public class LexAn {
                     this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.KW_THEN, buffer, position);
-                } else if (buffer.equals("typ")) {
+                }
+                /** kljucna beseda typ */
+                else if (buffer.equals("typ")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.matches("[a-zA-Z0-9_]")) {
@@ -279,7 +312,9 @@ public class LexAn {
                     this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.KW_TYP, buffer, position);
-                } else if (buffer.equals("var")) {
+                }
+                /** kljucna beseda var */
+                else if (buffer.equals("var")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.matches("[a-zA-Z0-9_]")) {
@@ -289,7 +324,9 @@ public class LexAn {
                     this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.KW_VAR, buffer, position);
-                } else if (buffer.equals("where")) {
+                }
+                /** kljucna beseda where */
+                else if (buffer.equals("where")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.matches("[a-zA-Z0-9_]")) {
@@ -299,7 +336,9 @@ public class LexAn {
                     this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.KW_WHERE, buffer, position);
-                } else if (buffer.equals("while")) {
+                }
+                /** kljucna beseda while */
+                else if (buffer.equals("while")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.matches("[a-zA-Z0-9_]")) {
@@ -309,7 +348,9 @@ public class LexAn {
                     this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.KW_WHILE, buffer, position);
-                } else if (buffer.equals("true") || buffer.equals("false")) {
+                }
+                /** tip logical (true, false) */
+                else if (buffer.equals("true") || buffer.equals("false")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.matches("[a-zA-Z0-9_]")) {
@@ -319,7 +360,9 @@ public class LexAn {
                     this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.LOG_CONST, buffer, position);
-                } else if (buffer.matches("[0-9]+")) {
+                }
+                /** tip integer */
+                else if (buffer.matches("[0-9]+")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.matches("[0-9]+")) {
@@ -329,7 +372,9 @@ public class LexAn {
                     this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.INT_CONST, buffer, position);
-                } else if (buffer.matches("\'[^\']*")) {
+                }
+                /** tip string */
+                else if (buffer.matches("\'[^\']*")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.equals("'")) {
@@ -345,7 +390,9 @@ public class LexAn {
                         Report.error(position, "String ni zakljucen!");
                         System.exit(1);
                     }
-                } else if (buffer.matches("[a-zA-Z]+[a-zA-Z0-9_]*")) {
+                }
+                /** identifier */
+                else if (buffer.matches("[a-zA-Z]+[a-zA-Z0-9_]*")) {
                     if (this.scn.hasNext()) {
                         this.next = this.scn.next();
                         if (this.next.matches("[a-zA-Z0-9_]+")) {
