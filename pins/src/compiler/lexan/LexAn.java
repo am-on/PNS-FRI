@@ -71,8 +71,9 @@ public class LexAn {
      * @return Naslednji simbol iz izvorne datoteke.
      */
     public Symbol lexAn() {
+        Position position;
+        Symbol s;
         String buffer = "";
-        Position position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
 
         while (scn.hasNext() || this.next.length() > 0) {
 
@@ -83,8 +84,9 @@ public class LexAn {
                 buffer += scn.next();
             }
 
+            s = null;
             position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
-            Symbol s = null;
+
 
             /** new line */
             if (buffer.equals((char) 10 + "") || buffer.equals((char) 13 + "")) {
@@ -374,7 +376,7 @@ public class LexAn {
                 s = new Symbol(Token.INTEGER, buffer, position);
             }
             /** ime atomarnega podatkovnega tipa string */
-            else if (buffer.equals("integer")) {
+            else if (buffer.equals("string")) {
                 if (this.scn.hasNext()) {
                     this.next = this.scn.next();
                     if (this.next.matches("[a-zA-Z0-9_]")) {
@@ -462,7 +464,7 @@ public class LexAn {
 
             if (s != null) {
                 this.updatePosition();
-                System.out.println(s + " " + s.position);
+                this.dump(s);
                 return s;
             }
         }
@@ -470,6 +472,9 @@ public class LexAn {
         position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
         this.next = "";
         buffer = "";
+
+        s = new Symbol(Token.EOF, buffer, position);
+        this.dump(s);
         return new Symbol(Token.EOF, buffer, position);
     }
 
