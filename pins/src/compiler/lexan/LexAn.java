@@ -135,7 +135,7 @@ public class LexAn {
                 if (this.next.equals("=")) {
                     buffer += this.next;
                     this.next = "";
-                    setPosition(buffer.length());
+                    this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.NEQ, buffer, position);
                 } else {
@@ -152,7 +152,7 @@ public class LexAn {
                 if (this.next.equals("=")) {
                     buffer += this.next;
                     this.next = "";
-                    setPosition(buffer.length());
+                    this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.EQU, buffer, position);
                 } else {
@@ -168,7 +168,7 @@ public class LexAn {
                 if (this.next.equals("=")) {
                     buffer += this.next;
                     this.next = "";
-                    setPosition(buffer.length());
+                    this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.LEQ, buffer, position);
                 } else {
@@ -184,7 +184,7 @@ public class LexAn {
                 if (this.next.equals("=")) {
                     buffer += this.next;
                     this.next = "";
-                    setPosition(buffer.length());
+                    this.setPosition(buffer.length());
                     position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                     s = new Symbol(Token.GEQ, buffer, position);
                 } else {
@@ -428,6 +428,7 @@ public class LexAn {
                             Report.error(position, "Unclosed string const.");
                         }
                         this.updatePosition();
+                        position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                         Report.error(position, "Invalid char \'" + this.next + "\' " + "in string const.");
                     }
                 } else {
@@ -437,7 +438,7 @@ public class LexAn {
                 }
             }
             /** identifier */
-            else if (buffer.matches("[a-zA-Z]+[a-zA-Z0-9_]*")) {
+            else if (buffer.matches("[a-zA-Z_]+[a-zA-Z0-9_]*")) {
                 if (this.scn.hasNext()) {
                     this.next = this.scn.next();
                     if (this.next.matches("[a-zA-Z0-9_]+")) {
@@ -466,7 +467,7 @@ public class LexAn {
             else {
                 this.setPosition(buffer.length());
                 position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
-                Report.error(position, "Unkown character: " + buffer);
+                Report.error(position, "Invalid char \'" + buffer + "\'");
             }
 
             if (s != null) {
