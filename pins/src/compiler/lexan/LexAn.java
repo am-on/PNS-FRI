@@ -412,16 +412,27 @@ public class LexAn {
                 s = new Symbol(Token.INT_CONST, buffer, position);
             }
             /** tip string */
-            else if (buffer.matches("\'[^\']*")) {
+            else if (buffer.charAt(0) == '\'') {
                 if (this.scn.hasNext()) {
                     this.next = this.scn.next();
+
                     if (this.next.equals("'")) {
                         buffer += this.next;
                         this.next = "";
+
+                        // preveri, ce gre slucajno za ''
+                        if(this.scn.hasNext()) {
+                            this.next = this.scn.next();
+                            if (this.next.equals("'")) {
+                                continue;
+                            }
+                        }
+
                         this.setStringPosition(buffer);
                         position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                         s = new Symbol(Token.STR_CONST, buffer, position);
-                    }else if (this.next.charAt(0) < 32 || this.next.charAt(0) > 126) {
+
+                    } else if (this.next.charAt(0) < 32 || this.next.charAt(0) > 126) {
                         this.setPosition(buffer.length());
                         position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
                         if(this.next.charAt(0) == 9 || this.next.charAt(0) == 10 || this.next.charAt(0) == 13) {
