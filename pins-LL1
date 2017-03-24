@@ -3,6 +3,7 @@ definitions -> definition definitions' .
 definitions' -> ; definition definitions' .
 definitions' -> .
 definition -> type_definition .
+definition -> function_definition .
 definition -> variable_definition .
 type_definition -> typ identifier : type .
 type -> identifier .
