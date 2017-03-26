@@ -65,7 +65,7 @@ public class SynAn {
         parseDefinitions();
 
         if(peek() != Token.EOF) {
-            Report.error("ups");
+            Report.error("expected EOF, found: " + nextSym);
         }
 
 	}
@@ -94,7 +94,7 @@ public class SynAn {
             case Token.KW_VAR:
                 dump("definition -> variable_definition");
                 return parseVariableDefinition();
-            default: Report.error("Invalid type or variable definition");
+            default: Report.error(nextSym.position,"Invalid type or variable definition:" + nextSymbol());
         }
         return false;
     }

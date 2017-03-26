@@ -1,12 +1,22 @@
-sA12pr_a1_1A
-545spremenljivka45_01_
-arr+ * /
-+-*
-arr+'456+'true
-=
-typ+10
-==
-!=
-sA12pr_a1_1A
-spremenljivka45_01_ = 123;
-3 + 8
+fun funkcija(i:iaa):integer = 5 > 3;
+fun funkcija(i:logical):integer = 5 < 3;
+fun funkcija(i:integer):integer = 5 >= 3;
+fun funkcija(i:logical):integer = 5 <= 3;
+fun funkcija(i:iaa):integer = c5 == 3;
+fun funkcija(i:iaa):integer = 5 != a3;
+fun funkcija(i:iaa):integer = 5 & 3;
+fun funkcija(i:iaa):integer = 5 | 3;
+
+fun funkcija ( parametri :  spremenljivka ) : spremenljivka  = ( spremenljivka { where typ spremenljivka : spremenljivka});
+typ tabela : arr [ 1] arr [ 2] tabela ;
+
+fun funkcija(x:nwa):integer = (
+	{ for i=0,i>=x,1 : (a == s)	},
+	{ if 1==1 then 2==2  },
+	{ if 1==1 then 2==2 else 1!=1 },
+	{ 1==1 = 1==1  },
+	{ while +5 : +4 }
+)
+
+
+
