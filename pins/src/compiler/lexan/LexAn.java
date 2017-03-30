@@ -46,11 +46,10 @@ public class LexAn {
      * @param dump           Ali se izpisujejo vmesni rezultati.
      */
     public LexAn(String sourceFileName, boolean dump) {
-        // TODO
         this.dump = dump;
         try {
-            this.scn = new Scanner(new File(sourceFileName));
-            this.scn.useDelimiter("");
+            scn = new Scanner(new File(sourceFileName));
+            scn.useDelimiter("");
 
         } catch (FileNotFoundException e) {
             System.out.println(e);
@@ -61,7 +60,7 @@ public class LexAn {
         begColumn = 1;
         endLine = 1;
         endColumn = 1;
-        this.next = "";
+        next = "";
     }
 
     /**
@@ -75,27 +74,27 @@ public class LexAn {
         Symbol s;
         String buffer = "";
 
-        while (scn.hasNext() || this.next.length() > 0) {
+        while (scn.hasNext() || next.length() > 0) {
 
-            if (this.next.length() > 0) {
-                buffer += this.next;
-                this.next = "";
+            if (next.length() > 0) {
+                buffer += next;
+                next = "";
             } else {
                 buffer += scn.next();
             }
 
             s = null;
-            position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+            position = new Position(begLine, begColumn, endLine, endColumn);
 
 
             /** new line */
             if (buffer.equals((char) 10 + "") || buffer.equals((char) 13 + "")) {
-                this.newLine();
+                newLine();
                 buffer = "";
             }
             /** space in tab */
             else if (buffer.equals((char) 9 + "") || buffer.equals((char) 32 + "")) {
-                this.updatePosition();
+                updatePosition();
                 buffer = "";
             }
             /** ADD operator */
@@ -129,14 +128,14 @@ public class LexAn {
             /** ! in != operator */
             // TODO: separate ! and != ?
             else if (buffer.equals("!")) {
-                if (this.scn.hasNext()) {
-                    this.next = scn.next();
+                if (scn.hasNext()) {
+                    next = scn.next();
                 }
-                if (this.next.equals("=")) {
-                    buffer += this.next;
-                    this.next = "";
-                    this.setPosition(buffer.length());
-                    position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                if (next.equals("=")) {
+                    buffer += next;
+                    next = "";
+                    setPosition(buffer.length());
+                    position = new Position(begLine, begColumn, endLine, endColumn);
                     s = new Symbol(Token.NEQ, buffer, position);
                 } else {
                     s = new Symbol(Token.NOT, buffer, position);
@@ -146,14 +145,14 @@ public class LexAn {
             /** = in == operator */
             // TODO: separate = and == ?
             else if (buffer.equals("=")) {
-                if (this.scn.hasNext()) {
-                    this.next = scn.next();
+                if (scn.hasNext()) {
+                    next = scn.next();
                 }
-                if (this.next.equals("=")) {
-                    buffer += this.next;
-                    this.next = "";
-                    this.setPosition(buffer.length());
-                    position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                if (next.equals("=")) {
+                    buffer += next;
+                    next = "";
+                    setPosition(buffer.length());
+                    position = new Position(begLine, begColumn, endLine, endColumn);
                     s = new Symbol(Token.EQU, buffer, position);
                 } else {
                     s = new Symbol(Token.ASSIGN, buffer, position);
@@ -162,14 +161,14 @@ public class LexAn {
             /** < in <= operator */
             // TODO: separate < and <= ?
             else if (buffer.equals("<")) {
-                if (this.scn.hasNext()) {
-                    this.next = scn.next();
+                if (scn.hasNext()) {
+                    next = scn.next();
                 }
-                if (this.next.equals("=")) {
-                    buffer += this.next;
-                    this.next = "";
-                    this.setPosition(buffer.length());
-                    position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                if (next.equals("=")) {
+                    buffer += next;
+                    next = "";
+                    setPosition(buffer.length());
+                    position = new Position(begLine, begColumn, endLine, endColumn);
                     s = new Symbol(Token.LEQ, buffer, position);
                 } else {
                     s = new Symbol(Token.LTH, buffer, position);
@@ -178,14 +177,14 @@ public class LexAn {
             /** > in => operator */
             // TODO: separate = and == ?
             else if (buffer.equals(">")) {
-                if (this.scn.hasNext()) {
-                    this.next = scn.next();
+                if (scn.hasNext()) {
+                    next = scn.next();
                 }
-                if (this.next.equals("=")) {
-                    buffer += this.next;
-                    this.next = "";
-                    this.setPosition(buffer.length());
-                    position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                if (next.equals("=")) {
+                    buffer += next;
+                    next = "";
+                    setPosition(buffer.length());
+                    position = new Position(begLine, begColumn, endLine, endColumn);
                     s = new Symbol(Token.GEQ, buffer, position);
                 } else {
                     s = new Symbol(Token.GTH, buffer, position);
@@ -233,267 +232,267 @@ public class LexAn {
             }
             /** kljucna beseda arr */
             else if (buffer.equals("arr")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.KW_ARR, buffer, position);
             }
             /** kljucna beseda else */
             else if (buffer.equals("else")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.KW_ELSE, buffer, position);
             }
             /** kljucna beseda for */
             else if (buffer.equals("for")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.KW_FOR, buffer, position);
             }
             /** kljucna beseda fun */
             else if (buffer.equals("fun")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.KW_FUN, buffer, position);
             }
             /** kljucna beseda if */
             else if (buffer.equals("if")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.KW_IF, buffer, position);
             }
             /** kljucna beseda then */
             else if (buffer.equals("then")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.KW_THEN, buffer, position);
             }
             /** kljucna beseda typ */
             else if (buffer.equals("typ")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.KW_TYP, buffer, position);
             }
             /** kljucna beseda var */
             else if (buffer.equals("var")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.KW_VAR, buffer, position);
             }
             /** kljucna beseda where */
             else if (buffer.equals("where")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.KW_WHERE, buffer, position);
             }
             /** kljucna beseda while */
             else if (buffer.equals("while")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.KW_WHILE, buffer, position);
             }
             /** ime atomarnega podatkovnega tipa logical */
             else if (buffer.equals("logical")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.LOGICAL, buffer, position);
             }
             /** ime atomarnega podatkovnega tipa integer */
             else if (buffer.equals("integer")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.INTEGER, buffer, position);
             }
             /** ime atomarnega podatkovnega tipa string */
             else if (buffer.equals("string")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.STRING, buffer, position);
             }
             /** tip logical (true, false) */
             else if (buffer.equals("true") || buffer.equals("false")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.LOG_CONST, buffer, position);
             }
             /** tip integer */
             else if (buffer.matches("[0-9]+")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[0-9]+")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[0-9]+")) {
                         continue;
                     }
                 }
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 s = new Symbol(Token.INT_CONST, buffer, position);
             }
             /** tip string */
             else if (buffer.charAt(0) == '\'') {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
+                if (scn.hasNext()) {
+                    next = scn.next();
 
-                    if (this.next.equals("'")) {
-                        buffer += this.next;
-                        this.next = "";
+                    if (next.equals("'")) {
+                        buffer += next;
+                        next = "";
 
                         // preveri, ce gre slucajno za ''
-                        if(this.scn.hasNext()) {
-                            this.next = this.scn.next();
-                            if (this.next.equals("'")) {
+                        if(scn.hasNext()) {
+                            next = scn.next();
+                            if (next.equals("'")) {
                                 continue;
                             }
                         }
 
-                        this.setStringPosition(buffer);
-                        position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                        setStringPosition(buffer);
+                        position = new Position(begLine, begColumn, endLine, endColumn);
                         s = new Symbol(Token.STR_CONST, buffer, position);
 
-                    } else if (this.next.charAt(0) < 32 || this.next.charAt(0) > 126) {
-                        this.setPosition(buffer.length());
-                        position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
-                        if(this.next.charAt(0) == 9 || this.next.charAt(0) == 10 || this.next.charAt(0) == 13) {
+                    } else if (next.charAt(0) < 32 || next.charAt(0) > 126) {
+                        setPosition(buffer.length());
+                        position = new Position(begLine, begColumn, endLine, endColumn);
+                        if(next.charAt(0) == 9 || next.charAt(0) == 10 || next.charAt(0) == 13) {
                             Report.error(position, "Unclosed string const.");
                         }
-                        this.updatePosition();
-                        position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
-                        Report.error(position, "Invalid char \'" + this.next + "\' " + "in string const.");
+                        updatePosition();
+                        position = new Position(begLine, begColumn, endLine, endColumn);
+                        Report.error(position, "Invalid char \'" + next + "\' " + "in string const.");
                     }
                 } else {
-                    this.setPosition(buffer.length());
-                    position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                    setPosition(buffer.length());
+                    position = new Position(begLine, begColumn, endLine, endColumn);
                     Report.error(position, "Unclosed string const. Expected ', got: EOF");
                 }
             }
             /** identifier */
             else if (buffer.matches("[a-zA-Z_]+[a-zA-Z0-9_]*")) {
-                if (this.scn.hasNext()) {
-                    this.next = this.scn.next();
-                    if (this.next.matches("[a-zA-Z0-9_]+")) {
+                if (scn.hasNext()) {
+                    next = scn.next();
+                    if (next.matches("[a-zA-Z0-9_]+")) {
                         continue;
                     } else {
-                        this.setPosition(buffer.length());
-                        position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                        setPosition(buffer.length());
+                        position = new Position(begLine, begColumn, endLine, endColumn);
                         s = new Symbol(Token.IDENTIFIER, buffer, position);
                     }
                 } else {
-                    this.setPosition(buffer.length());
-                    position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                    setPosition(buffer.length());
+                    position = new Position(begLine, begColumn, endLine, endColumn);
                     s = new Symbol(Token.IDENTIFIER, buffer, position);
                 }
             }
             /** komentar # */
             else if (buffer.charAt(0) == 35) {
-                if(this.scn.hasNext()) {
-                    this.next = scn.next();
-                    if(this.next.charAt(0) == 10 || this.next.charAt(0) == 13) {
+                if(scn.hasNext()) {
+                    next = scn.next();
+                    if(next.charAt(0) == 10 || next.charAt(0) == 13) {
                         buffer = "";
                     }
                 }
             }
             /** neznani simbol */
             else {
-                this.setPosition(buffer.length());
-                position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
+                setPosition(buffer.length());
+                position = new Position(begLine, begColumn, endLine, endColumn);
                 Report.error(position, "Invalid char \'" + buffer + "\'");
             }
 
             if (s != null) {
-                this.updatePosition();
-                this.dump(s);
+                updatePosition();
+                dump(s);
                 return s;
             }
         }
 
-        position = new Position(this.begLine, this.begColumn, this.endLine, this.endColumn);
-        this.next = "";
+        position = new Position(begLine, begColumn, endLine, endColumn);
+        next = "";
         buffer = "";
 
         s = new Symbol(Token.EOF, buffer, position);
-        this.dump(s);
+        dump(s);
         return new Symbol(Token.EOF, buffer, position);
     }
 
@@ -501,8 +500,8 @@ public class LexAn {
      * Posodobi pozicijo na zacetek novega simbola
      */
     private void updatePosition() {
-        this.endColumn += 1;
-        this.begColumn = endColumn;
+        endColumn += 1;
+        begColumn = endColumn;
     }
 
     /**
@@ -511,7 +510,7 @@ public class LexAn {
      * @param len dolžina simbola
      */
     private void setPosition(int len) {
-        this.endColumn = this.begColumn + len - 1;
+        endColumn = begColumn + len - 1;
     }
 
     /**
@@ -523,14 +522,14 @@ public class LexAn {
         for (int i = 0; i < str.length(); i++) {
             int chr = str.charAt(i);
             if (chr == 10 || chr == 13) {
-                this.endLine += 1;
-                this.endColumn = 1;
+                endLine += 1;
+                endColumn = 1;
             } else {
-                this.endColumn += 1;
+                endColumn += 1;
             }
         }
-        if (this.endColumn > 1) {
-            this.endColumn -= 1;
+        if (endColumn > 1) {
+            endColumn -= 1;
         }
     }
 
@@ -538,10 +537,10 @@ public class LexAn {
      * Nastavi pozicijo ob skoku v novo vrstico
      */
     private void newLine() {
-        this.begColumn = 1;
-        this.begLine += 1;
-        this.endColumn = 1;
-        this.endLine += 1;
+        begColumn = 1;
+        begLine += 1;
+        endColumn = 1;
+        endLine += 1;
     }
 
 
