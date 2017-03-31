@@ -1,7 +1,11 @@
 package compiler.synan;
 
+import compiler.Position;
 import compiler.Report;
+import compiler.abstr.tree.*;
 import compiler.lexan.*;
+
+import java.util.Vector;
 
 /**
  * Sintaksni analizator.
@@ -47,6 +51,11 @@ public class SynAn {
         return lexAn.lexAn();
     }
 
+    private Position currentPosition() {
+	    peek();
+	    return nextSym.position;
+    }
+
 	private int peek() {
 		if (this.next == -1) {
 		    this.nextSym = lexAn.lexAn();
@@ -58,24 +67,36 @@ public class SynAn {
 	/**
 	 * Opravi sintaksno analizo.
 	 */
-	public void parse() {
+	public AbsTree parse() {
 
 
         dump("source -> definitions");
-        parseDefinitions();
+        AbsTree abs = parseDefinitions();
 
         if(peek() != Token.EOF) {
             Report.error("expected EOF, found: " + nextSym);
         }
+
+        return abs;
 
 	}
 
     /**
      * definitions -> definition definitions' .
      * */
-	private boolean parseDefinitions() {
+	private AbsTree parseDefinitions() {
         dump("definitions -> definition definitions'");
-		return parseDefinition() && parseDefinitions_();
+
+        Vector<AbsDef> defs = new Vector<>();
+        defs.add(parseDefinition());
+
+        Vector<AbsDef> defs1 = parseDefinitions_();
+        if (defs1 != null) {
+            defs.addAll(defs1);
+        }
+
+        return new AbsDefs(defs.get(0).position, defs);
+
 	}
 
     /**
@@ -83,7 +104,7 @@ public class SynAn {
      * definition -> function_definition .
      * definition -> variable_definition .
      */
-    private boolean parseDefinition() {
+    private AbsDef parseDefinition() {
         switch (peek()) {
             case Token.KW_TYP:
                 dump("definition -> type_definition");
@@ -94,63 +115,91 @@ public class SynAn {
             case Token.KW_VAR:
                 dump("definition -> variable_definition");
                 return parseVariableDefinition();
-            default: Report.error(nextSym.position,"Invalid type or variable definition:" + nextSymbol());
+            default:
+                Report.error(nextSym.position,"Invalid type or variable definition: " + nextSym.lexeme);
+                return null;
         }
-        return false;
     }
 
     /**
      * definitions' -> ; definition definitions' .
      * definitions' -> .
      */
-    private boolean parseDefinitions_() {
+    private Vector<AbsDef> parseDefinitions_() {
         dump("definitions' -> ; definition definitions'");
         if (peek() == Token.SEMIC) {
-            nextToken();
-            return parseDefinition() && parseDefinitions_();
+            parseEndSymbol(Token.SEMIC);
+
+            Vector<AbsDef> defs = new Vector<>();
+            defs.add(parseDefinition());
+
+            Vector<AbsDef> defs1 = parseDefinitions_();
+            if (defs1 != null) {
+                defs.addAll(defs1);
+            }
+
+            return defs;
         }
         dump("definitions' -> ε");
-        return true;
+        return null;
     }
 
     /**
      * type_definition -> typ identifier : type
      */
-    private boolean parseTypeDefinition() {
+    private AbsTypeDef parseTypeDefinition() {
         dump("type_definition -> typ identifier : type");
-        return parseEndSymbol(Token.KW_TYP)
-                && parseEndSymbol(Token.IDENTIFIER)
-                && parseEndSymbol(Token.COLON)
-                && parseType();
+        Position p = nextSym.position;
+        parseEndSymbol(Token.KW_TYP);
 
+        String name = parseEndSymbol(Token.IDENTIFIER);
+
+        parseEndSymbol(Token.COLON);
+
+        AbsType t = parseType();
+        return new AbsTypeDef(p, name, t);
     }
 
     /**
      * function_definition -> fun identifier ( parameters ) : type = expression .
      */
-    private boolean parseFunctionDefinition() {
+    private AbsFunDef parseFunctionDefinition() {
         dump("function_definition -> fun identifier ( parameters ) : type = expression");
+        Position p = currentPosition();
+        parseEndSymbol(Token.KW_FUN);
 
-        return parseEndSymbol(Token.KW_FUN)
-                && parseEndSymbol(Token.IDENTIFIER)
-                && parseEndSymbol(Token.LPARENT)
-                && parseParameters()
-                && parseEndSymbol(Token.RPARENT)
-                && parseEndSymbol(Token.COLON)
-                && parseType()
-                && parseEndSymbol(Token.ASSIGN)
-                && parseExpression();
+        String name = parseEndSymbol(Token.IDENTIFIER);
+
+        parseEndSymbol(Token.LPARENT);
+
+        Vector<AbsPar> pars = parseParameters();
+
+        parseEndSymbol(Token.RPARENT);
+        parseEndSymbol(Token.COLON);
+
+        AbsType type = parseType();
+
+        parseEndSymbol(Token.ASSIGN);
+
+        AbsExpr expr = parseExpression();
+
+        return new AbsFunDef(p, name, pars, type, expr);
     }
 
     /**
      * variable_definition -> var identifier : type
      */
-    private boolean parseVariableDefinition() {
+    private AbsVarDef parseVariableDefinition() {
         dump("variable_definition -> var identifier : type");
-        return parseEndSymbol(Token.KW_VAR)
-                && parseEndSymbol(Token.IDENTIFIER)
-                && parseEndSymbol(Token.COLON)
-                && parseType();
+        Position p = currentPosition();
+        parseEndSymbol(Token.KW_VAR);
+
+        String name = parseEndSymbol(Token.IDENTIFIER);
+
+        parseEndSymbol(Token.COLON);
+
+        AbsType type = parseType();
+        return new AbsVarDef(p, name, type);
     }
 
     /**
@@ -161,31 +210,39 @@ public class SynAn {
      * type -> arr [ int_const ] type .
      *
      */
-    private boolean parseType() {
+    private AbsType parseType() {
+        String name;
+        Position p = currentPosition();
         switch (peek()) {
             case Token.IDENTIFIER:
                 dump("type -> identifier");
-                return parseEndSymbol(Token.IDENTIFIER);
+                name = parseEndSymbol(Token.IDENTIFIER);
+                return new AbsTypeName(p, name);
             case Token.LOGICAL:
                 dump("type -> logical");
-                return parseEndSymbol(Token.LOGICAL);
+                name = parseEndSymbol(Token.LOGICAL);
+                return new AbsTypeName(p, name);
             case Token.INTEGER:
                 dump("type -> integer");
-                return parseEndSymbol(Token.INTEGER);
+                name = parseEndSymbol(Token.INTEGER);
+                return new AbsTypeName(p, name);
             case Token.STRING:
                 dump("type -> string");
-                return parseEndSymbol(Token.STRING);
+                name = parseEndSymbol(Token.STRING);
+                return new AbsTypeName(p, name);
             case Token.KW_ARR:
                 dump("type -> arr [ int_const ] type");
+                parseEndSymbol(Token.KW_ARR);
+                parseEndSymbol(Token.LBRACKET);
 
-                return parseEndSymbol(Token.KW_ARR)
-                        && parseEndSymbol(Token.LBRACKET)
-                        && parseEndSymbol(Token.INT_CONST)
-                        && parseEndSymbol(Token.RBRACKET)
-                        && parseType();
+                int tLen = Integer.parseInt(parseEndSymbol(Token.INT_CONST));
+
+                parseEndSymbol(Token.RBRACKET);
+                AbsType typeTree = parseType();
+                return new AbsArrType(p, tLen, typeTree);
             default:
                 Report.error(nextSym.position, "Invalid type name: " + this.nextSym.toString());
-                return false;
+                return null;
         }
 
     }
@@ -193,40 +250,59 @@ public class SynAn {
     /**
      * parameters -> parameter parameters' .
      */
-    private boolean parseParameters() {
+    private Vector<AbsPar> parseParameters() {
         dump("parameters -> parameter parameters'");
-        return parseParameter() && parseParameters_();
+
+        Vector<AbsPar> pars = new Vector<>();
+        pars.add(parseParameter());
+
+        Vector<AbsPar> params = parseParameters_();
+        if (params != null) {
+            pars.addAll(params);
+        }
+        return pars;
     }
 
     /**
      * parameter -> identifier : type .
      */
-    private boolean parseParameter() {
+    private AbsPar parseParameter() {
         dump("parameter -> identifier : type");
+        Position p = currentPosition();
+        String name = parseEndSymbol(Token.IDENTIFIER);
 
-        return parseEndSymbol(Token.IDENTIFIER)
-                && parseEndSymbol(Token.COLON)
-                && parseType();
+        parseEndSymbol(Token.COLON);
 
+        AbsType type = parseType();
+        return  new AbsPar(p, name, type);
     }
 
     /**
      * parameters' -> , parameter parameters' .
      * parameters' -> .
      */
-    private boolean parseParameters_() {
+    private Vector<AbsPar> parseParameters_() {
         if (peek() == Token.COMMA) {
-            return parseEndSymbol(Token.COMMA) && parseParameter() && parseParameters_();
+            parseEndSymbol(Token.COMMA);
+            Vector<AbsPar> pars = new Vector<>();
+            pars.add(parseParameter());
+
+            Vector<AbsPar> params = parseParameters_();
+            if (params != null) {
+                pars.addAll(params);
+            }
+            return pars;
         }
 
         dump("parameters' -> ε");
-        return true;
+        return null;
     }
 
     /**
      * expression -> logical_ior_expression expression'
      */
-    private boolean parseExpression() {
+    private AbsExpr parseExpression() {
+
         return parseLogicalIorExpression() && parseExpression_();
     }
 
@@ -243,7 +319,7 @@ public class SynAn {
                     && parseEndSymbol(Token.RBRACE);
         }
         dump("expression' -> ε");
-        return true;
+        return null;
     }
 
     /**
@@ -592,13 +668,16 @@ public class SynAn {
      *
      *
      */
-    private boolean parseEndSymbol(int t) {
+    private String parseEndSymbol(int t) {
         if (peek() == t) {
+            String l = nextSym.lexeme;
+
             nextToken();
-            return true;
+
+            return l;
         }
         Report.error(nextSym.position, "Invalid symbol: " + this.nextSym.toString());
-        return false;
+        return "";
     }
 
 
