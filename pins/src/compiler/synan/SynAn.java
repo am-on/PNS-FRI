@@ -9,7 +9,7 @@ import java.util.Vector;
 
 /**
  * Sintaksni analizator.
- * 
+ *
  * @author sliva
  */
 public class SynAn {
@@ -26,7 +26,7 @@ public class SynAn {
 
 	/**
 	 * Ustvari nov sintaksni analizator.
-	 * 
+	 *
 	 * @param lexAn
 	 *            Leksikalni analizator.
 	 * @param dump
@@ -56,6 +56,7 @@ public class SynAn {
 	    return nextSym.position;
     }
 
+
 	private int peek() {
 		if (this.next == -1) {
 		    this.nextSym = lexAn.lexAn();
@@ -84,7 +85,7 @@ public class SynAn {
     /**
      * definitions -> definition definitions' .
      * */
-	private AbsTree parseDefinitions() {
+	private AbsDefs parseDefinitions() {
         dump("definitions -> definition definitions'");
 
         Vector<AbsDef> defs = new Vector<>();
@@ -94,8 +95,8 @@ public class SynAn {
         if (defs1 != null) {
             defs.addAll(defs1);
         }
-
-        return new AbsDefs(defs.get(0).position, defs);
+        Position p = new Position(defs.get(0).position, defs.lastElement().position);
+        return new AbsDefs(p, defs);
 
 	}
 
@@ -149,7 +150,7 @@ public class SynAn {
      */
     private AbsTypeDef parseTypeDefinition() {
         dump("type_definition -> typ identifier : type");
-        Position p = nextSym.position;
+        Position p = currentPosition();
         parseEndSymbol(Token.KW_TYP);
 
         String name = parseEndSymbol(Token.IDENTIFIER);
@@ -157,6 +158,7 @@ public class SynAn {
         parseEndSymbol(Token.COLON);
 
         AbsType t = parseType();
+        p = new Position(p, t.position);
         return new AbsTypeDef(p, name, t);
     }
 
@@ -182,7 +184,7 @@ public class SynAn {
         parseEndSymbol(Token.ASSIGN);
 
         AbsExpr expr = parseExpression();
-
+        p = new Position(p, expr.position);
         return new AbsFunDef(p, name, pars, type, expr);
     }
 
@@ -199,6 +201,8 @@ public class SynAn {
         parseEndSymbol(Token.COLON);
 
         AbsType type = parseType();
+
+        p = new Position(p, type.position);
         return new AbsVarDef(p, name, type);
     }
 
@@ -220,16 +224,16 @@ public class SynAn {
                 return new AbsTypeName(p, name);
             case Token.LOGICAL:
                 dump("type -> logical");
-                name = parseEndSymbol(Token.LOGICAL);
-                return new AbsTypeName(p, name);
+                parseEndSymbol(Token.LOGICAL);
+                return new AbsAtomType(p, AbsAtomType.LOG);
             case Token.INTEGER:
                 dump("type -> integer");
-                name = parseEndSymbol(Token.INTEGER);
-                return new AbsTypeName(p, name);
+                parseEndSymbol(Token.INTEGER);
+                return new AbsAtomType(p, AbsAtomType.INT);
             case Token.STRING:
                 dump("type -> string");
-                name = parseEndSymbol(Token.STRING);
-                return new AbsTypeName(p, name);
+                parseEndSymbol(Token.STRING);
+                return new AbsAtomType(p, AbsAtomType.STR);
             case Token.KW_ARR:
                 dump("type -> arr [ int_const ] type");
                 parseEndSymbol(Token.KW_ARR);
@@ -239,6 +243,7 @@ public class SynAn {
 
                 parseEndSymbol(Token.RBRACKET);
                 AbsType typeTree = parseType();
+                p = new Position(p, typeTree.position);
                 return new AbsArrType(p, tLen, typeTree);
             default:
                 Report.error(nextSym.position, "Invalid type name: " + this.nextSym.toString());
@@ -274,6 +279,7 @@ public class SynAn {
         parseEndSymbol(Token.COLON);
 
         AbsType type = parseType();
+        p = new Position(p, type.position);
         return  new AbsPar(p, name, type);
     }
 
@@ -302,31 +308,38 @@ public class SynAn {
      * expression -> logical_ior_expression expression'
      */
     private AbsExpr parseExpression() {
-
-        return parseLogicalIorExpression() && parseExpression_();
+        dump("expression -> logical_ior_expression expression'");
+        AbsExpr e1 = parseLogicalIorExpression();
+        return parseExpression_(e1);
     }
 
     /**
      * expression' -> { WHERE definitions }
      * expression' -> .
      */
-    private boolean parseExpression_() {
+    private AbsExpr parseExpression_(AbsExpr e) {
         if (peek() == Token.LBRACE) {
             dump("expression' -> { WHERE definitions }");
-            return parseEndSymbol(Token.LBRACE)
-                    && parseEndSymbol(Token.KW_WHERE)
-                    && parseDefinitions()
-                    && parseEndSymbol(Token.RBRACE);
+            parseEndSymbol(Token.LBRACE);
+            parseEndSymbol(Token.KW_WHERE);
+
+            AbsDefs defs = parseDefinitions();
+            Position p = new Position(e.position, currentPosition());
+            parseEndSymbol(Token.RBRACE);
+
+            return new AbsWhere(e.position, e, defs);
         }
         dump("expression' -> ε");
-        return null;
+        return e;
     }
 
     /**
      * logical_ior_expression -> logical_and_expression logical_ior_expression'     *
      */
-    private boolean parseLogicalIorExpression() {
-        return parseLogicalAndExpression() && parseLogicalIorExpression_();
+    private AbsExpr parseLogicalIorExpression() {
+        dump("logical_ior_expression -> logical_and_expression logical_ior_expression' ");
+        AbsExpr aExpr = parseLogicalAndExpression();
+        return parseLogicalIorExpression_(aExpr);
     }
 
     /**
@@ -334,45 +347,59 @@ public class SynAn {
      * logical_ior_expression' -> .
      * @return
      */
-    private boolean parseLogicalIorExpression_() {
+    private AbsExpr parseLogicalIorExpression_(AbsExpr e) {
         if (peek() == Token.IOR) {
             dump("logical_ior_expression' -> | logical_and_expression logical_ior_expression'");
-            return parseEndSymbol(Token.IOR) && parseLogicalAndExpression() && parseLogicalIorExpression_();
+            Position p = currentPosition();
+
+            parseEndSymbol(Token.IOR);
+
+            AbsExpr a = parseLogicalAndExpression();
+            p = new Position(p, currentPosition());
+            AbsBinExpr join = new AbsBinExpr(p, AbsBinExpr.IOR, e, a);
+
+            return parseLogicalIorExpression_(join);
         }
         dump("logical_ior_expression' -> ε");
-        return true;
+        return e;
     }
 
     /**
      * logical_and_expression -> compare_expression logical_and_expression'
      */
-    private boolean parseLogicalAndExpression() {
+    private AbsExpr parseLogicalAndExpression() {
         dump("logical_and_expression -> compare_expression logical_and_expression'");
-        return parseCompareExpression() && parseLogicalAndExpression_();
+        AbsExpr cExpr = parseCompareExpression();
+        return parseLogicalAndExpression_(cExpr);
     }
 
     /**
      * logical_and_expression' -> & compare_expression logical_and_expression'
      * logical_and_expression' -> .
      */
-    private boolean parseLogicalAndExpression_() {
+    private AbsExpr parseLogicalAndExpression_(AbsExpr e) {
         if (peek() == Token.AND) {
             dump("logical_and_expression' -> & compare_expression logical_and_expression'");
-            return parseEndSymbol(Token.AND)
-                    && parseCompareExpression()
-                    && parseLogicalAndExpression_();
+
+            Position p = currentPosition();
+            parseEndSymbol(Token.AND);
+
+            AbsExpr e2 = parseCompareExpression();
+            p = new Position(p, currentPosition());
+            AbsBinExpr join = new AbsBinExpr(p, AbsBinExpr.AND, e, e2);
+            return parseLogicalAndExpression_(join);
         }
         dump("logical_and_expression' -> ε");
-        return true;
+        return e;
     }
 
     /**
      * compare_expression -> additive_expression compare_expression'
      */
-    private boolean parseCompareExpression() {
+    private AbsExpr parseCompareExpression() {
         dump("compare_expression -> additive_expression compare_expression'");
-        return parseAdditiveExpression()
-                && parseCompareExpression_();
+        AbsExpr e = parseAdditiveExpression();
+        return parseCompareExpression_(e);
     }
 
     /**
@@ -384,29 +411,55 @@ public class SynAn {
      * compare_expression' -> > additive_expression .
      * compare_expression' -> .
      */
-    private boolean parseCompareExpression_() {
+    private AbsExpr parseCompareExpression_(AbsExpr e) {
+        Position p = e.position;
+        AbsExpr e2;
         switch (peek()) {
             case Token.EQU:
                 dump("compare_expression' -> == additive_expression");
-                return parseEndSymbol(Token.EQU) && parseAdditiveExpression();
+                parseEndSymbol(Token.EQU);
+
+				e2 = parseAdditiveExpression();
+                p = new Position(p, e2.position);
+				return new AbsBinExpr(p, AbsBinExpr.EQU, e, e2);
             case Token.NEQ:
                 dump("compare_expression' -> != additive_expression");
-                return parseEndSymbol(Token.NEQ) && parseAdditiveExpression();
+                parseEndSymbol(Token.NEQ);
+
+				e2 = parseAdditiveExpression();
+                p = new Position(p, e2.position);
+				return new AbsBinExpr(p, AbsBinExpr.NEQ, e, e2);
             case Token.LEQ:
                 dump("compare_expression' -> <= additive_expression");
-                return parseEndSymbol(Token.LEQ) && parseAdditiveExpression();
+                parseEndSymbol(Token.LEQ);
+
+				e2 = parseAdditiveExpression();
+                p = new Position(p, e2.position);
+				return new AbsBinExpr(p, AbsBinExpr.LEQ, e, e2);
             case Token.GEQ:
                 dump("compare_expression' -> >= additive_expression");
-                return parseEndSymbol(Token.GEQ) && parseAdditiveExpression();
+                parseEndSymbol(Token.GEQ);
+
+				e2 = parseAdditiveExpression();
+                p = new Position(p, e2.position);
+				return new AbsBinExpr(p, AbsBinExpr.GEQ, e, e2);
             case Token.LTH:
                 dump("compare_expression' -> < additive_expression");
-                return parseEndSymbol(Token.LTH) && parseAdditiveExpression();
+                parseEndSymbol(Token.LTH);
+
+				e2 = parseAdditiveExpression();
+                p = new Position(p, e2.position);
+				return new AbsBinExpr(p, AbsBinExpr.LTH, e, e2);
             case Token.GTH:
                 dump("compare_expression' -> > additive_expression");
-                return parseEndSymbol(Token.GTH) && parseAdditiveExpression();
+                parseEndSymbol(Token.GTH);
+
+				e2 = parseAdditiveExpression();
+                p = new Position(p, e2.position);
+				return new AbsBinExpr(p, AbsBinExpr.GTH, e, e2);
             default:
                 dump("compare_expression' -> ε");
-                return true;
+                return e;
         }
 
     }
@@ -414,9 +467,10 @@ public class SynAn {
     /**
      * additive_expression -> multiplicative_expression additive_expression'
      */
-    private boolean parseAdditiveExpression() {
+    private AbsExpr parseAdditiveExpression() {
         dump("additive_expression -> multiplicative_expression additive_expression'");
-        return parseMultiplicativeExpression() && parseAdditiveExpression_();
+        AbsExpr e = parseMultiplicativeExpression();
+        return parseAdditiveExpression_(e);
     }
 
     /**
@@ -424,30 +478,41 @@ public class SynAn {
      * additive_expression' -> - multiplicative_expression additive_expression' .
      * additive_expression' -> .
      */
-    private boolean parseAdditiveExpression_() {
+    private AbsExpr parseAdditiveExpression_(AbsExpr e) {
+        Position p = e.position;
+        AbsExpr e2;
+        AbsExpr join;
         switch (peek()) {
             case Token.ADD:
                 dump("additive_expression' -> + multiplicative_expression additive_expression'");
-                return parseEndSymbol(Token.ADD)
-                        && parseMultiplicativeExpression()
-                        && parseAdditiveExpression_();
+                parseEndSymbol(Token.ADD);
+
+                e2 = parseMultiplicativeExpression();
+                p = new Position(p, e2.position);
+                join = new AbsBinExpr(p, AbsBinExpr.ADD, e, e2);
+                return parseAdditiveExpression_(join);
             case Token.SUB:
                 dump("additive_expression' -> - multiplicative_expression additive_expression'");
-                return parseEndSymbol(Token.SUB)
-                        && parseMultiplicativeExpression()
-                        && parseAdditiveExpression_();
+                parseEndSymbol(Token.SUB);
+
+                e2 = parseMultiplicativeExpression();
+                p = new Position(p, e2.position);
+                join = new AbsBinExpr(p, AbsBinExpr.SUB, e, e2);
+                return parseAdditiveExpression_(join);
+
             default:
                 dump("additive_expression' -> ε");
-                return true;
+                return e;
         }
     }
 
     /**
      * multiplicative_expression -> prefix_expression multiplicative_expression'
      */
-    private boolean parseMultiplicativeExpression() {
+    private AbsExpr parseMultiplicativeExpression() {
         dump("multiplicative_expression -> prefix_expression multiplicative_expression'");
-        return parsePrefixExpression() && parseMultiplicativeExpression_();
+        AbsExpr e = parsePrefixExpression();
+        return parseMultiplicativeExpression_(e);
     }
 
     /**
@@ -456,20 +521,35 @@ public class SynAn {
      * multiplicative_expression' -> % prefix_expression multiplicative_expression'
      * multiplicative_expression' -> .
      */
-    private boolean parseMultiplicativeExpression_() {
+    private AbsExpr parseMultiplicativeExpression_(AbsExpr e) {
+        Position p = e.position;
+        AbsExpr e2;
+        AbsExpr join;
         switch (peek()) {
             case Token.MUL:
                 dump("multiplicative_expression' -> * prefix_expression multiplicative_expression'");
-                return parseEndSymbol(Token.MUL) && parsePrefixExpression() && parseMultiplicativeExpression_();
+                parseEndSymbol(Token.MUL);
+                e2 = parsePrefixExpression();
+                p = new Position(p, e2.position);
+                join = new AbsBinExpr(p, AbsBinExpr.MUL, e, e2);
+                return parseMultiplicativeExpression_(join);
             case Token.DIV:
                 dump("multiplicative_expression' -> / prefix_expression multiplicative_expression'");
-                return parseEndSymbol(Token.DIV) && parsePrefixExpression() && parseMultiplicativeExpression_();
+                parseEndSymbol(Token.DIV);
+                e2 = parsePrefixExpression();
+                p = new Position(p, e2.position);
+                join = new AbsBinExpr(p, AbsBinExpr.DIV, e, e2);
+                return parseMultiplicativeExpression_(join);
             case Token.MOD:
                 dump("multiplicative_expression' -> % prefix_expression multiplicative_expression'");
-                return parseEndSymbol(Token.MOD) && parsePrefixExpression() && parseMultiplicativeExpression_();
+                parseEndSymbol(Token.MOD);
+                e2 = parsePrefixExpression();
+                p = new Position(p, e2.position);
+                join = new AbsBinExpr(p, AbsBinExpr.MOD, e, e2);
+                return parseMultiplicativeExpression_(join);
             default:
                 dump("multiplicative_expression' -> ε");
-                return true;
+                return e;
         }
     }
 
@@ -479,17 +559,29 @@ public class SynAn {
      * prefix_expression -> ! prefix_expression .
      * prefix_expression -> postfix_expression .
      */
-    private boolean parsePrefixExpression() {
+    private AbsExpr parsePrefixExpression() {
+        Position p = currentPosition();
+        AbsExpr e2;
         switch (peek()) {
             case Token.ADD:
                 dump("prefix_expression -> + prefix_expression");
-                return parseEndSymbol(Token.ADD) && parsePrefixExpression();
+                parseEndSymbol(Token.ADD);
+                e2 = parsePrefixExpression();
+                p = new Position(p, e2.position);
+                return new AbsUnExpr(p, AbsUnExpr.ADD, e2);
+
             case Token.SUB:
                 dump("prefix_expression -> - prefix_expression");
-                return parseEndSymbol(Token.SUB) && parsePrefixExpression();
+                parseEndSymbol(Token.SUB);
+                e2 = parsePrefixExpression();
+                p = new Position(p, e2.position);
+                return new AbsUnExpr(p, AbsUnExpr.SUB, e2);
             case Token.NOT:
                 dump("prefix_expression -> ! prefix_expression");
-                return parseEndSymbol(Token.NOT) && parsePrefixExpression();
+                parseEndSymbol(Token.NOT);
+                e2 = parsePrefixExpression();
+                p = new Position(p, e2.position);
+                return new AbsUnExpr(p, AbsUnExpr.NOT, e2);
             default:
                 dump("prefix_expression -> postfix_expression");
                 return parsePostfixExpression();
@@ -499,9 +591,10 @@ public class SynAn {
     /**
      * postfix_expression -> atom_expression postfix_expression' .
      */
-    private boolean parsePostfixExpression() {
+    private AbsExpr parsePostfixExpression() {
         dump("postfix_expression -> atom_expression postfix_expression'");
-        return parseAtomExpression() && parsePostfixExpression_();
+        AbsExpr e = parseAtomExpression();
+        return parsePostfixExpression_(e);
     }
 
     /**
@@ -509,16 +602,23 @@ public class SynAn {
      * postfix_expression' -> .
      * @return
      */
-    private boolean parsePostfixExpression_() {
+    private AbsExpr parsePostfixExpression_(AbsExpr e) {
+        Position p = currentPosition();
+
         if (peek() == Token.LBRACKET) {
             dump("postfix_expression' -> [ expression ] postfix_expression'");
-            return parseEndSymbol(Token.LBRACKET)
-                    && parseExpression()
-                    && parseEndSymbol(Token.RBRACKET)
-                    && parsePostfixExpression_();
+            parseEndSymbol(Token.LBRACKET);
+
+            AbsExpr e2 = parseExpression();
+            p = new Position(p, e2.position);
+            AbsBinExpr join = new AbsBinExpr(p, AbsBinExpr.ARR, e, e2);
+
+            parseEndSymbol(Token.RBRACKET);
+
+            return  parsePostfixExpression_(join);
         }
         dump("postfix_expression' -> ε");
-        return true;
+        return e;
 
     }
 
@@ -530,31 +630,57 @@ public class SynAn {
      * atom_expression -> identifier atom_expression' .
      * atom_expression -> { atom_expression''' .
      */
-    private boolean parseAtomExpression() {
+    private AbsExpr parseAtomExpression() {
+        Position p = currentPosition();
+        String name;
+        AbsExprs e;
+        Vector<AbsExpr> exprs;
         switch (peek()) {
             case Token.LOG_CONST:
                 dump("atom_expression -> log_constant");
-                return parseEndSymbol(Token.LOG_CONST);
+                name = parseEndSymbol(Token.LOG_CONST);
+                return new AbsAtomConst(p, AbsAtomConst.LOG, name);
             case Token.INT_CONST:
                 dump("atom_expression -> int_constant");
-                return parseEndSymbol(Token.INT_CONST);
+                name = parseEndSymbol(Token.INT_CONST);
+                return new AbsAtomConst(p, AbsAtomConst.INT, name);
             case Token.STR_CONST:
                 dump("atom_expression -> str_constant");
-                return parseEndSymbol(Token.STR_CONST);
+                name = parseEndSymbol(Token.STR_CONST);
+                return new AbsAtomConst(p, AbsAtomConst.STR, name);
             case Token.LPARENT:
                 dump("atom_expression -> ( expressions )");
-                return parseEndSymbol(Token.LPARENT)
-                        && parseExpressions()
-                        && parseEndSymbol(Token.RPARENT);
+                parseEndSymbol(Token.LPARENT);
+
+                exprs = parseExpressions();
+                p = new Position(p, currentPosition());
+                e = new AbsExprs(p, exprs);
+
+                parseEndSymbol(Token.RPARENT);
+
+                return e;
             case Token.IDENTIFIER:
                 dump("atom_expression -> identifier atom_expression'");
-                return parseEndSymbol(Token.IDENTIFIER) && parseAtomExpression_();
+                p = currentPosition();
+                name = parseEndSymbol(Token.IDENTIFIER);
+                exprs = new Vector<>();
+
+                Vector<AbsExpr> e2 = parseAtomExpression_();
+                if (e2 != null) {
+                    exprs.addAll(e2);
+                    p = new Position(p, exprs.lastElement().position);
+                    return new AbsFunCall(p, name, exprs);
+                }
+
+                return new AbsVarName(p, name);
             case Token.LBRACE:
                 dump("atom_expression -> { atom_expression'''");
-                return parseEndSymbol(Token.LBRACE) && parseAtomExpression___();
+                p = currentPosition();
+                parseEndSymbol(Token.LBRACE);
+                return parseAtomExpression___(p);
             default:
                 Report.error(nextSym.position, "Invalid atom expression: " + this.nextSym.toString());
-                return false;
+                return null;
         }
     }
 
@@ -562,34 +688,46 @@ public class SynAn {
      * atom_expression' -> ( expressions )
      * atom_expression' -> .
      */
-    private boolean parseAtomExpression_() {
+    private Vector<AbsExpr> parseAtomExpression_() {
         if (peek() == Token.LPARENT) {
             dump("atom_expression' -> ( expressions )");
-            return parseEndSymbol(Token.LPARENT)
-                    && parseExpressions()
-                    && parseEndSymbol(Token.RPARENT);
+            parseEndSymbol(Token.LPARENT);
+            Vector<AbsExpr> e = parseExpressions();
+            parseEndSymbol(Token.RPARENT);
+
+            return e;
         }
         dump("atom_expression' -> ε");
-        return true;
+        return null;
     }
 
     /**
      * atom_expression'' -> }
      * atom_expression'' -> else expression }
      */
-    private boolean parseAtomExpression__() {
+    private AbsExpr parseAtomExpression__(Position p, AbsExpr e1, AbsExpr e2) {
         switch (peek()) {
             case Token.RBRACE:
                 dump("atom_expression'' -> } ");
-                return parseEndSymbol(Token.RBRACE);
+
+                p = new Position(p, currentPosition());
+
+                parseEndSymbol(Token.RBRACE);
+
+                return new AbsIfThen(p, e1, e2);
             case Token.KW_ELSE:
                 dump("atom_expression'' -> else expression }");
-                return parseEndSymbol(Token.KW_ELSE)
-                        && parseExpression()
-                        && parseEndSymbol(Token.RBRACE);
+                parseEndSymbol(Token.KW_ELSE);
+
+                AbsExpr e3 = parseExpression();
+                p = new Position(p, currentPosition());
+
+                parseEndSymbol(Token.RBRACE);
+
+                return new AbsIfThenElse(p, e1, e2, e3);
             default:
                 Report.error(nextSym.position, "Invalid atom expression: " + this.nextSym.toString());
-                return false;
+                return null;
         }
     }
 
@@ -599,74 +737,123 @@ public class SynAn {
      * atom_expression''' -> for identifier = expression , expression , expression : expression } .
      * atom_expression''' -> expression = expression } .
      */
-    private boolean parseAtomExpression___() {
+    private AbsExpr parseAtomExpression___(Position p) {
+        AbsExpr e1;
+        AbsExpr e2;
+        AbsExpr e3;
+        AbsExpr e4;
         switch (peek()) {
             case Token.KW_IF:
                 dump("atom_expression''' -> if expression then expression atom_expression''");
-                return parseEndSymbol(Token.KW_IF)
-                        && parseExpression()
-                        && parseEndSymbol(Token.KW_THEN)
-                        && parseExpression()
-                        && parseAtomExpression__();
+                parseEndSymbol(Token.KW_IF);
+
+                e1 = parseExpression();
+
+                parseEndSymbol(Token.KW_THEN);
+
+                e2 = parseExpression();
+
+                p = new Position(p, e2.position);
+                return  parseAtomExpression__(p, e1, e2);
+
             case Token.KW_WHILE:
                 dump("atom_expression''' -> while expression : expression }");
-                return parseEndSymbol(Token.KW_WHILE)
-                        && parseExpression()
-                        && parseEndSymbol(Token.COLON)
-                        && parseExpression()
-                        && parseEndSymbol(Token.RBRACE);
+                parseEndSymbol(Token.KW_WHILE);
+
+                e1 = parseExpression();
+
+                parseEndSymbol(Token.COLON);
+
+                e2 = parseExpression();
+                p = new Position(p, currentPosition());
+
+                parseEndSymbol(Token.RBRACE);
+
+
+                return new AbsWhile(p, e1, e2);
+
             case Token.KW_FOR:
                 dump("atom_expression''' -> for identifier = expression , expression , expression : expression }");
-                return parseEndSymbol(Token.KW_FOR)
-                        && parseEndSymbol(Token.IDENTIFIER)
-                        && parseEndSymbol(Token.ASSIGN)
-                        && parseExpression()
-                        && parseEndSymbol(Token.COMMA)
-                        && parseExpression()
-                        && parseEndSymbol(Token.COMMA)
-                        && parseExpression()
-                        && parseEndSymbol(Token.COLON)
-                        && parseExpression()
-                        && parseEndSymbol(Token.RBRACE);
+                parseEndSymbol(Token.KW_FOR);
+
+                AbsVarName varName = new AbsVarName(currentPosition(), parseEndSymbol(Token.IDENTIFIER));
+
+				parseEndSymbol(Token.ASSIGN);
+
+				e1 = parseExpression();
+
+				parseEndSymbol(Token.COMMA);
+
+				e2 = parseExpression();
+
+				parseEndSymbol(Token.COMMA);
+
+				e3 = parseExpression();
+
+				parseEndSymbol(Token.COLON);
+
+				e4 = parseExpression();
+
+                p = new Position(p, currentPosition());
+
+				parseEndSymbol(Token.RBRACE);
+
+				return new AbsFor(p, varName, e1, e2, e3, e4);
             default:
                 dump("atom_expression''' -> expression = expression }");
-                return parseExpression()
-                        && parseEndSymbol(Token.ASSIGN)
-                        && parseExpression()
-                        && parseEndSymbol(Token.RBRACE);
 
+                e1 = parseExpression();
+
+                parseEndSymbol(Token.ASSIGN);
+
+                e2 = parseExpression();
+                p = new Position(p, currentPosition());
+
+                parseEndSymbol(Token.RBRACE);
+
+                return new AbsBinExpr(p, AbsBinExpr.ASSIGN, e1, e2);
         }
     }
 
     /**
      * expressions -> expression expressions'
      */
-    private boolean parseExpressions() {
+    private Vector<AbsExpr> parseExpressions() {
         dump("expressions -> expression expressions'");
-        return parseExpression() && parseExpressions_();
+        Vector<AbsExpr> exprs = new Vector<>();
+        exprs.add(parseExpression());
+
+        Vector<AbsExpr> e2 = parseExpressions_();
+        if (e2 != null)
+            exprs.addAll(e2);
+
+        return exprs;
     }
 
     /**
      * expressions' -> , expression expressions'
      * expressions' -> .
      */
-    private boolean parseExpressions_() {
+    private Vector<AbsExpr> parseExpressions_() {
         if (peek() == Token.COMMA) {
             dump("expressions' -> , expression expressions'");
-            return parseEndSymbol(Token.COMMA)
-                    && parseExpression()
-                    && parseExpressions_();
+            parseEndSymbol(Token.COMMA);
+
+            Vector<AbsExpr> exprs = new Vector<>();
+            exprs.add(parseExpression());
+
+            Vector<AbsExpr> e2 = parseExpressions_();
+            if (e2 != null)
+                exprs.addAll(e2);
+
+            return exprs;
         }
         dump("expressions' -> ε");
-        return true;
+        return null;
     }
 
-
-
-
     /**
-     *
-     *
+     * parse given end symbol
      */
     private String parseEndSymbol(int t) {
         if (peek() == t) {
@@ -677,14 +864,14 @@ public class SynAn {
             return l;
         }
         Report.error(nextSym.position, "Invalid symbol: " + this.nextSym.toString());
-        return "";
+        return null;
     }
 
 
 
     /**
 	 * Izpise produkcijo v datoteko z vmesnimi rezultati.
-	 * 
+	 *
 	 * @param production
 	 *            Produkcija, ki naj bo izpisana.
 	 */
