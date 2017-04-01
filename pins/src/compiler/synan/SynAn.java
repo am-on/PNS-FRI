@@ -47,10 +47,6 @@ public class SynAn {
 		return next;
 	}
 
-	private Symbol nextSymbol() {
-        return lexAn.lexAn();
-    }
-
     private Position currentPosition() {
 	    peek();
 	    return nextSym.position;
@@ -327,14 +323,14 @@ public class SynAn {
             Position p = new Position(e.position, currentPosition());
             parseEndSymbol(Token.RBRACE);
 
-            return new AbsWhere(e.position, e, defs);
+            return new AbsWhere(p, e, defs);
         }
         dump("expression' -> ε");
         return e;
     }
 
     /**
-     * logical_ior_expression -> logical_and_expression logical_ior_expression'     *
+     * logical_ior_expression -> logical_and_expression logical_ior_expression'
      */
     private AbsExpr parseLogicalIorExpression() {
         dump("logical_ior_expression -> logical_and_expression logical_ior_expression' ");
@@ -345,7 +341,6 @@ public class SynAn {
     /**
      * logical_ior_expression' -> | logical_and_expression logical_ior_expression' .
      * logical_ior_expression' -> .
-     * @return
      */
     private AbsExpr parseLogicalIorExpression_(AbsExpr e) {
         if (peek() == Token.IOR) {
@@ -600,7 +595,6 @@ public class SynAn {
     /**
      * postfix_expression' -> [ expression ] postfix_expression' .
      * postfix_expression' -> .
-     * @return
      */
     private AbsExpr parsePostfixExpression_(AbsExpr e) {
         Position p = currentPosition();
