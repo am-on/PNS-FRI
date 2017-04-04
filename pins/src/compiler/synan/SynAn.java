@@ -14,57 +14,64 @@ import java.util.Vector;
  */
 public class SynAn {
 
-	/** Leksikalni analizator. */
-	private LexAn lexAn;
+    /** Leksikalni analizator. */
+    private LexAn lexAn;
 
-	/** Ali se izpisujejo vmesni rezultati. */
-	private boolean dump;
+    /** Ali se izpisujejo vmesni rezultati. */
+    private boolean dump;
 
-	private int next;
+    private int next;
 
     private Symbol nextSym;
+    private Symbol oldSym;
 
-	/**
-	 * Ustvari nov sintaksni analizator.
-	 *
-	 * @param lexAn
-	 *            Leksikalni analizator.
-	 * @param dump
-	 *            Ali se izpisujejo vmesni rezultati.
-	 */
-	public SynAn(LexAn lexAn, boolean dump) {
-		this.lexAn = lexAn;
-		this.dump = dump;
-		this.next = -1;
-	}
+    /**
+     * Ustvari nov sintaksni analizator.
+     *
+     * @param lexAn
+     *            Leksikalni analizator.
+     * @param dump
+     *            Ali se izpisujejo vmesni rezultati.
+     */
+    public SynAn(LexAn lexAn, boolean dump) {
+        this.lexAn = lexAn;
+        this.dump = dump;
+        this.next = -1;
+    }
 
-	private int nextToken() {
-		if (this.next == -1) {
+    private int nextToken() {
+        if (this.next == -1) {
             return lexAn.lexAn().token;
         }
-		int next = this.next;
-		this.next = -1;
-		return next;
-	}
+        int next = this.next;
+        this.next = -1;
+        return next;
+    }
+
+    private Position oldPosition() {
+        return oldSym.position;
+    }
 
     private Position currentPosition() {
-	    peek();
-	    return nextSym.position;
+        peek();
+        return nextSym.position;
     }
 
 
-	private int peek() {
-		if (this.next == -1) {
-		    this.nextSym = lexAn.lexAn();
-			this.next = nextSym.token;
-		}
-		return this.next;
-	}
+    private int peek() {
+        if (next == -1) {
+            oldSym = nextSym;
+            nextSym = lexAn.lexAn();
+            next = nextSym.token;
+        }
+        oldSym = nextSym;
+        return this.next;
+    }
 
-	/**
-	 * Opravi sintaksno analizo.
-	 */
-	public AbsTree parse() {
+    /**
+     * Opravi sintaksno analizo.
+     */
+    public AbsTree parse() {
 
 
         dump("source -> definitions");
@@ -76,12 +83,12 @@ public class SynAn {
 
         return abs;
 
-	}
+    }
 
     /**
      * definitions -> definition definitions' .
      * */
-	private AbsDefs parseDefinitions() {
+    private AbsDefs parseDefinitions() {
         dump("definitions -> definition definitions'");
 
         Vector<AbsDef> defs = new Vector<>();
@@ -94,7 +101,7 @@ public class SynAn {
         Position p = new Position(defs.get(0).position, defs.lastElement().position);
         return new AbsDefs(p, defs);
 
-	}
+    }
 
     /**
      * definition -> type_definition .
@@ -414,44 +421,44 @@ public class SynAn {
                 dump("compare_expression' -> == additive_expression");
                 parseEndSymbol(Token.EQU);
 
-				e2 = parseAdditiveExpression();
+                e2 = parseAdditiveExpression();
                 p = new Position(p, e2.position);
-				return new AbsBinExpr(p, AbsBinExpr.EQU, e, e2);
+                return new AbsBinExpr(p, AbsBinExpr.EQU, e, e2);
             case Token.NEQ:
                 dump("compare_expression' -> != additive_expression");
                 parseEndSymbol(Token.NEQ);
 
-				e2 = parseAdditiveExpression();
+                e2 = parseAdditiveExpression();
                 p = new Position(p, e2.position);
-				return new AbsBinExpr(p, AbsBinExpr.NEQ, e, e2);
+                return new AbsBinExpr(p, AbsBinExpr.NEQ, e, e2);
             case Token.LEQ:
                 dump("compare_expression' -> <= additive_expression");
                 parseEndSymbol(Token.LEQ);
 
-				e2 = parseAdditiveExpression();
+                e2 = parseAdditiveExpression();
                 p = new Position(p, e2.position);
-				return new AbsBinExpr(p, AbsBinExpr.LEQ, e, e2);
+                return new AbsBinExpr(p, AbsBinExpr.LEQ, e, e2);
             case Token.GEQ:
                 dump("compare_expression' -> >= additive_expression");
                 parseEndSymbol(Token.GEQ);
 
-				e2 = parseAdditiveExpression();
+                e2 = parseAdditiveExpression();
                 p = new Position(p, e2.position);
-				return new AbsBinExpr(p, AbsBinExpr.GEQ, e, e2);
+                return new AbsBinExpr(p, AbsBinExpr.GEQ, e, e2);
             case Token.LTH:
                 dump("compare_expression' -> < additive_expression");
                 parseEndSymbol(Token.LTH);
 
-				e2 = parseAdditiveExpression();
+                e2 = parseAdditiveExpression();
                 p = new Position(p, e2.position);
-				return new AbsBinExpr(p, AbsBinExpr.LTH, e, e2);
+                return new AbsBinExpr(p, AbsBinExpr.LTH, e, e2);
             case Token.GTH:
                 dump("compare_expression' -> > additive_expression");
                 parseEndSymbol(Token.GTH);
 
-				e2 = parseAdditiveExpression();
+                e2 = parseAdditiveExpression();
                 p = new Position(p, e2.position);
-				return new AbsBinExpr(p, AbsBinExpr.GTH, e, e2);
+                return new AbsBinExpr(p, AbsBinExpr.GTH, e, e2);
             default:
                 dump("compare_expression' -> ε");
                 return e;
@@ -662,7 +669,7 @@ public class SynAn {
                 Vector<AbsExpr> e2 = parseAtomExpression_();
                 if (e2 != null) {
                     exprs.addAll(e2);
-                    p = new Position(p, exprs.lastElement().position);
+                    p = new Position(p, oldPosition());
                     return new AbsFunCall(p, name, exprs);
                 }
 
@@ -772,27 +779,27 @@ public class SynAn {
 
                 AbsVarName varName = new AbsVarName(currentPosition(), parseEndSymbol(Token.IDENTIFIER));
 
-				parseEndSymbol(Token.ASSIGN);
+                parseEndSymbol(Token.ASSIGN);
 
-				e1 = parseExpression();
+                e1 = parseExpression();
 
-				parseEndSymbol(Token.COMMA);
+                parseEndSymbol(Token.COMMA);
 
-				e2 = parseExpression();
+                e2 = parseExpression();
 
-				parseEndSymbol(Token.COMMA);
+                parseEndSymbol(Token.COMMA);
 
-				e3 = parseExpression();
+                e3 = parseExpression();
 
-				parseEndSymbol(Token.COLON);
+                parseEndSymbol(Token.COLON);
 
-				e4 = parseExpression();
+                e4 = parseExpression();
 
                 p = new Position(p, currentPosition());
 
-				parseEndSymbol(Token.RBRACE);
+                parseEndSymbol(Token.RBRACE);
 
-				return new AbsFor(p, varName, e1, e2, e3, e4);
+                return new AbsFor(p, varName, e1, e2, e3, e4);
             default:
                 dump("atom_expression''' -> expression = expression }");
 
@@ -864,17 +871,17 @@ public class SynAn {
 
 
     /**
-	 * Izpise produkcijo v datoteko z vmesnimi rezultati.
-	 *
-	 * @param production
-	 *            Produkcija, ki naj bo izpisana.
-	 */
-	private void dump(String production) {
-		if (!dump)
-			return;
-		if (Report.dumpFile() == null)
-			return;
-		Report.dumpFile().println(production);
-	}
+     * Izpise produkcijo v datoteko z vmesnimi rezultati.
+     *
+     * @param production
+     *            Produkcija, ki naj bo izpisana.
+     */
+    private void dump(String production) {
+        if (!dump)
+            return;
+        if (Report.dumpFile() == null)
+            return;
+        Report.dumpFile().println(production);
+    }
 
 }
