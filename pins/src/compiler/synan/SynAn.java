@@ -604,7 +604,7 @@ public class SynAn {
             parseEndSymbol(Token.LBRACKET);
 
             AbsExpr e2 = parseExpression();
-            p = new Position(p, e2.position);
+            p = new Position(e.position, currentPosition());
             AbsBinExpr join = new AbsBinExpr(p, AbsBinExpr.ARR, e, e2);
 
             parseEndSymbol(Token.RBRACKET);
