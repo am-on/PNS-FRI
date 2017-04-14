@@ -17,7 +17,7 @@ public class NameChecker implements Visitor {
     }
     @Override
     public void visit(AbsArrType acceptor) {
-
+        acceptor.type.accept(this);
     }
 
     @Override
@@ -32,7 +32,8 @@ public class NameChecker implements Visitor {
 
     @Override
     public void visit(AbsBinExpr acceptor) {
-
+        acceptor.expr1.accept(this);
+        acceptor.expr2.accept(this);
     }
 
     @Override
@@ -111,16 +112,33 @@ public class NameChecker implements Visitor {
 
     @Override
     public void visit(AbsFor acceptor) {
-
+        acceptor.count.accept(this);
+        acceptor.hi.accept(this);
+        acceptor.lo.accept(this);
+        acceptor.step.accept(this);
+        acceptor.body.accept(this);
     }
 
     @Override
     public void visit(AbsFunCall acceptor) {
+        // check if function is defined
+        if (SymbTable.fnd(acceptor.name) == null) {
+            Report.error(acceptor.position, "Call to undefined function " + acceptor.name);
+        }
 
+        SymbDesc.setNameDef(acceptor, SymbTable.fnd(acceptor.name));
+
+        // check function args
+        for (int i = 0; i < acceptor.numArgs(); i++) {
+            acceptor.arg(i).accept(this);
+        }
     }
 
     @Override
     public void visit(AbsFunDef acceptor) {
+        acceptor.type.accept(this);
+
+
         SymbTable.newScope();
 
         for (int i = 0; i < acceptor.numPars(); i++) {
@@ -134,12 +152,15 @@ public class NameChecker implements Visitor {
 
     @Override
     public void visit(AbsIfThen accpetor) {
-
+        accpetor.cond.accept(this);
+        accpetor.thenBody.accept(this);
     }
 
     @Override
     public void visit(AbsIfThenElse accpetor) {
-
+        accpetor.cond.accept(this);
+        accpetor.thenBody.accept(this);
+        accpetor.elseBody.accept(this);
     }
 
     @Override
@@ -160,11 +181,13 @@ public class NameChecker implements Visitor {
     public void visit(AbsTypeName acceptor) {
         if (SymbTable.fnd(acceptor.name) == null)
             Report.error(acceptor.position, "Undefined type: " + acceptor.name);
+
+        SymbDesc.setNameDef(acceptor, SymbTable.fnd(acceptor.name));
     }
 
     @Override
     public void visit(AbsUnExpr acceptor) {
-
+        acceptor.expr.accept(this);
     }
 
     @Override
@@ -182,19 +205,26 @@ public class NameChecker implements Visitor {
 
     @Override
     public void visit(AbsVarName acceptor) {
+        if (SymbTable.fnd(acceptor.name) == null)
+            Report.error(acceptor.position, "Undefined var: " + acceptor.name);
 
+        SymbDesc.setNameDef(acceptor, SymbTable.fnd(acceptor.name));
     }
 
     @Override
     public void visit(AbsWhere acceptor) {
+        SymbTable.newScope();
+        acceptor.defs.accept(this);
+        acceptor.expr.accept(this);
+        SymbTable.oldScope();
 
     }
 
     @Override
     public void visit(AbsWhile acceptor) {
-
+        acceptor.cond.accept(this);
+        acceptor.body.accept(this);
     }
 
-    // TODO
 
 }
