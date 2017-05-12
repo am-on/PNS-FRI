@@ -37,6 +37,11 @@ public class SemArrType extends SemType {
 	}
 
 	@Override
+	public int size() {
+		return 4 * size;
+	}
+
+	@Override
 	public String toString() {
 		return "ARR(" + size + "," + type.toString() + ")";
 	}

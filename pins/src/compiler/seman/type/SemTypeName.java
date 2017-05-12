@@ -64,6 +64,11 @@ public class SemTypeName extends SemType {
 	}
 
 	@Override
+	public int size() {
+		return 4;
+	}
+
+	@Override
 	public String toString() {
 		return "TYP(" + name + ":" + (type == null ? "" : type.toString())
 				+ ")";

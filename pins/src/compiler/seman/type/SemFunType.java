@@ -66,6 +66,11 @@ public class SemFunType extends SemType {
 		} else
 			return false;
 	}
+
+	@Override
+	public int size() {
+		return 4;
+	}
 	
 	@Override
 	public String toString() {

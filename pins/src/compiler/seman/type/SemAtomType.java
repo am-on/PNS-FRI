@@ -37,6 +37,11 @@ public class SemAtomType extends SemType {
 	}
 
 	@Override
+	public int size() {
+		return 4;
+	}
+
+	@Override
 	public String toString() {
 		switch (type) {
 		case LOG: return "LOGICAL";
