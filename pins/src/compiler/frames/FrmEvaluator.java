@@ -70,9 +70,12 @@ public class FrmEvaluator implements Visitor {
             sizeArgs += SymbDesc.getType(acceptor.arg(i)).size();
         }
 
+        // get max of args or results size
+        sizeArgs = Math.max(sizeArgs, SymbDesc.getType(acceptor).size());
+
         // update sizeArgs of current function, if this function call needs the most space for arguments
         FrmFrame f = stack.peek();
-        if (f.sizeArgs < sizeArgs) f.sizeArgs += sizeArgs;
+        if (f.sizeArgs < sizeArgs) f.sizeArgs = sizeArgs;
     }
 
     @Override
