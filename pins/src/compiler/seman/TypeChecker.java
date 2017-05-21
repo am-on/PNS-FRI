@@ -16,6 +16,16 @@ public class TypeChecker implements Visitor {
 
     private int phase;
 
+    private void validateParamsResultType(Position position, SemType type) {
+
+        switch (type.toString()) {
+            case "INTEGER":
+            case "STRING":
+            case "LOGICAL": return;
+            default: Report.error(position,"Only INTEGER, STRING or LOGICAL types allowed as function parameter or result");
+        }
+    }
+
     @Override
     public void visit(AbsDefs acceptor) {
         // type defs
@@ -300,7 +310,7 @@ public class TypeChecker implements Visitor {
                 acceptor.par(i).accept(this);
                 parTypes.add(SymbDesc.getType(acceptor.par(i).type));
             }
-
+            validateParamsResultType(acceptor.position, SymbDesc.getType(acceptor.type));
             SymbDesc.setType(acceptor, new SemFunType(parTypes, SymbDesc.getType(acceptor.type)));
         } else {
             acceptor.expr.accept(this);
@@ -354,6 +364,7 @@ public class TypeChecker implements Visitor {
     @Override
     public void visit(AbsPar acceptor) {
         acceptor.type.accept(this);
+        validateParamsResultType(acceptor.position, SymbDesc.getType(acceptor.type));
         SymbDesc.setType(acceptor, SymbDesc.getType(acceptor.type));
     }
 
