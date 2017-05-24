@@ -6,6 +6,7 @@ import compiler.abstr.*;
 import compiler.abstr.tree.*;
 import compiler.frames.*;
 import compiler.seman.SymbDesc;
+import compiler.seman.type.SemArrType;
 
 public class ImcCodeGen implements Visitor {
 
@@ -135,7 +136,18 @@ public class ImcCodeGen implements Visitor {
                 break;
 
             case AbsBinExpr.ARR:
-                // TODO
+                // get offset from array start
+                ImcCONST elementSize = new ImcCONST(((SemArrType) SymbDesc.getType(acceptor.expr1).actualType()).type.size());
+                ImcBINOP indexOffset = new ImcBINOP(ImcBINOP.MUL, expr2, elementSize);
+
+                // calculate element location: arrLoc + offset
+                ImcMEM arrLoc = new ImcMEM(expr1);
+                ImcBINOP elementLoc = new ImcBINOP(ImcBINOP.ADD, arrLoc, indexOffset);
+
+                // get element from memory
+                imPart.put(acceptor, new ImcMEM(elementLoc));
+                break;
+
             case AbsBinExpr.ASSIGN:
                 // x = expression
                 // store expression to x
