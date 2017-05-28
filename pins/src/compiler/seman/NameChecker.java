@@ -121,6 +121,8 @@ public class NameChecker implements Visitor {
 
     @Override
     public void visit(AbsFunCall acceptor) {
+        // TODO skip predefined functions
+
         // check if function is defined
         if (SymbTable.fnd(acceptor.name) == null) {
             Report.error(acceptor.position, "Call to undefined function " + acceptor.name);
