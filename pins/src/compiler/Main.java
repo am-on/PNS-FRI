@@ -1,5 +1,6 @@
 package compiler;
 
+import compiler.interpreter.Interpreter;
 import compiler.lexan.*;
 import compiler.synan.*;
 import compiler.abstr.*;
@@ -19,7 +20,7 @@ public class Main {
 	private static String sourceFileName;
 
 	/** Seznam vseh faz prevajalnika. */
-	private static String allPhases = "(lexan|synan|ast|seman|frames|imcode)";
+	private static String allPhases = "(lexan|synan|ast|seman|frames|imcode|interpreter)";
 
 	/** Doloca zadnjo fazo prevajanja, ki se bo se izvedla. */
 	private static String execPhase = "imcode";
@@ -106,6 +107,9 @@ public class Main {
 			source.accept(imcodegen);
 			imcode.dump(imcodegen.chunks);
 			if (execPhase.equals("imcode")) break;
+
+			Interpreter interpreter = new Interpreter(imcodegen);
+			if (execPhase.equals("interpreter")) break;
 			
 			// Neznana faza prevajanja.
 			if (! execPhase.equals(""))

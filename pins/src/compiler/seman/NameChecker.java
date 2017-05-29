@@ -3,6 +3,14 @@ package compiler.seman;
 import compiler.Report;
 import compiler.abstr.*;
 import compiler.abstr.tree.*;
+import compiler.frames.FrmDesc;
+import compiler.frames.FrmFrame;
+import compiler.frames.FrmLabel;
+import compiler.seman.type.SemAtomType;
+import compiler.seman.type.SemFunType;
+import compiler.seman.type.SemType;
+
+import java.util.Vector;
 
 /**
  * Preverjanje in razresevanje imen (razen imen komponent).
@@ -13,6 +21,55 @@ public class NameChecker implements Visitor {
 
 
     public NameChecker() {
+
+        // putInt
+        String funName = "putInt";
+        Vector<AbsPar> parameters = new Vector<AbsPar>();
+        Vector<SemType> parameterTypes = new Vector<SemType>();
+
+        parameters.add(new AbsPar(null, funName, new AbsAtomType(null, AbsAtomType.INT)));
+        parameterTypes.add(new SemAtomType(SemAtomType.INT));
+
+
+        AbsFunDef funDef = new AbsFunDef(null, funName, parameters, new AbsAtomType(null, AbsAtomType.INT), null);
+        try {
+            SymbTable.ins(funName, funDef);
+        } catch (SemIllegalInsertException e1) {
+            e1.printStackTrace();
+        }
+        SymbDesc.setType(funDef, new SemFunType(parameterTypes, new SemAtomType(SemAtomType.VOID)));
+        SymbDesc.setType(funDef.par(0), new SemAtomType(SemAtomType.INT));
+        SymbDesc.setScope(funDef, 0);
+        FrmFrame frame = new FrmFrame(funDef, 0);
+        frame.numPars = 1;
+        frame.sizePars = 4;
+        frame.label = FrmLabel.newLabel(funName);
+        FrmDesc.setFrame(funDef, frame);
+
+        // putString
+        funName = "putString";
+        parameters = new Vector<AbsPar>();
+        parameterTypes = new Vector<SemType>();
+
+        parameters.add(new AbsPar(null, funName, new AbsAtomType(null, AbsAtomType.STR)));
+        parameterTypes.add(new SemAtomType(SemAtomType.STR));
+
+
+        funDef = new AbsFunDef(null, funName, parameters, new AbsAtomType(null, AbsAtomType.STR), null);
+        try {
+            SymbTable.ins(funName, funDef);
+        } catch (SemIllegalInsertException e1) {
+            e1.printStackTrace();
+        }
+        SymbDesc.setType(funDef, new SemFunType(parameterTypes, new SemAtomType(SemAtomType.VOID)));
+        SymbDesc.setType(funDef.par(0), new SemAtomType(SemAtomType.STR));
+        SymbDesc.setScope(funDef, 0);
+        frame = new FrmFrame(funDef, 0);
+        frame.numPars = 1;
+        frame.sizePars = 4;
+        frame.label = FrmLabel.newLabel(funName);
+        FrmDesc.setFrame(funDef, frame);
+
 
     }
     @Override
@@ -121,8 +178,6 @@ public class NameChecker implements Visitor {
 
     @Override
     public void visit(AbsFunCall acceptor) {
-        // TODO skip predefined functions
-
         // check if function is defined
         if (SymbTable.fnd(acceptor.name) == null) {
             Report.error(acceptor.position, "Call to undefined function " + acceptor.name);

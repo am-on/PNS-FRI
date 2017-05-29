@@ -1,0 +1,22 @@
+fun main(i:integer):integer = (
+	putInt(i),
+	{one = 1},
+	{two = 0},
+	{current = 0},
+	{for i=0, 10, 1:
+		(
+			{ current = one + two },
+			{ one = two },
+			{ two = current },
+			print(current)
+		)
+	},
+	0
+) { where var i:integer; var one:integer; var two:integer; var current:integer };
+
+fun print(j:integer):integer = (
+	putInt(j),
+	0
+)
+
+

@@ -8,7 +8,7 @@ package compiler.frames;
 public class FrmLabel {
 
 	/** Ime labele.  */
-	private String name;
+	public String name;
 
 	/**
 	 * Ustvari novo labelo.

@@ -28,7 +28,13 @@ public class ImcCodeGen implements Visitor {
     }
 
     private ImcExpr getStaticLink(FrmFrame current, FrmFrame called, ImcExpr staticLink) {
-        int diff = current.level - called.level;
+        int diff = current.level;
+
+        if (called != null) {
+            diff = current.level - called.level;
+        }
+
+
         for (int i = 0; i < diff; i++) {
             staticLink = new ImcMEM(staticLink);
         }
