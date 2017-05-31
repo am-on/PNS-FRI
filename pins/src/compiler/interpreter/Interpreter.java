@@ -238,18 +238,19 @@ public class Interpreter {
 			}
 			if (instr.label.name().equals("_getInt")) {
 				Scanner scanner = new Scanner(System.in);
-				stM((Integer) ldM (sp + 4),scanner.nextInt());
-				return null;
+				System.out.print("Enter integer value: ");
+				stM(sp, scanner.nextInt());
+				return ldM(sp);
 			}
-			if (instr.label.name().equals("_putString")) {
-				System.out.println((String) ldM(sp + 4));
-				return null;
-			}
-			if (instr.label.name().equals("_getString")) {
-				Scanner scanner = new Scanner(System.in);
-				stM((Integer) ldM (sp + 4),scanner.next());
-				return null;
-			}
+//			if (instr.label.name().equals("_putString")) {
+//				System.out.println((String) ldM(sp + 4));
+//				return null;
+//			}
+//			if (instr.label.name().equals("_getString")) {
+//				Scanner scanner = new Scanner(System.in);
+//				stM((Integer) ldM (sp + 4),scanner.next());
+//				return null;
+//			}
 
 			new Interpreter(instr.label.name(), this.imcCodeGen);
 

@@ -27,49 +27,50 @@ public class NameChecker implements Visitor {
         Vector<AbsPar> parameters = new Vector<AbsPar>();
         Vector<SemType> parameterTypes = new Vector<SemType>();
 
-        parameters.add(new AbsPar(null, funName, new AbsAtomType(null, AbsAtomType.INT)));
+        parameters.add(new AbsPar(null, "number", new AbsAtomType(null, AbsAtomType.INT)));
         parameterTypes.add(new SemAtomType(SemAtomType.INT));
 
 
         AbsFunDef funDef = new AbsFunDef(null, funName, parameters, new AbsAtomType(null, AbsAtomType.INT), null);
+
         try {
             SymbTable.ins(funName, funDef);
         } catch (SemIllegalInsertException e1) {
             e1.printStackTrace();
         }
+
         SymbDesc.setType(funDef, new SemFunType(parameterTypes, new SemAtomType(SemAtomType.VOID)));
         SymbDesc.setType(funDef.par(0), new SemAtomType(SemAtomType.INT));
         SymbDesc.setScope(funDef, 0);
         FrmFrame frame = new FrmFrame(funDef, 0);
-        frame.numPars = 1;
-        frame.sizePars = 4;
+        frame.numPars = 2;
+        frame.sizePars = 8;
         frame.label = FrmLabel.newLabel(funName);
         FrmDesc.setFrame(funDef, frame);
 
-        // putString
-        funName = "putString";
+        // getInt
+        funName = "getInt";
         parameters = new Vector<AbsPar>();
         parameterTypes = new Vector<SemType>();
 
-        parameters.add(new AbsPar(null, funName, new AbsAtomType(null, AbsAtomType.STR)));
-        parameterTypes.add(new SemAtomType(SemAtomType.STR));
+        parameters.add(new AbsPar(null, "number", new AbsAtomType(null, AbsAtomType.INT)));
+        parameterTypes.add(new SemAtomType(SemAtomType.INT));
 
 
-        funDef = new AbsFunDef(null, funName, parameters, new AbsAtomType(null, AbsAtomType.STR), null);
+        funDef = new AbsFunDef(null, funName, parameters, new AbsAtomType(null, AbsAtomType.INT), null);
         try {
             SymbTable.ins(funName, funDef);
         } catch (SemIllegalInsertException e1) {
             e1.printStackTrace();
         }
-        SymbDesc.setType(funDef, new SemFunType(parameterTypes, new SemAtomType(SemAtomType.VOID)));
-        SymbDesc.setType(funDef.par(0), new SemAtomType(SemAtomType.STR));
+        SymbDesc.setType(funDef, new SemFunType(parameterTypes, new SemAtomType(SemAtomType.INT)));
+        SymbDesc.setType(funDef.par(0), new SemAtomType(SemAtomType.INT));
         SymbDesc.setScope(funDef, 0);
         frame = new FrmFrame(funDef, 0);
-        frame.numPars = 1;
-        frame.sizePars = 4;
+        frame.numPars = 2;
+        frame.sizePars = 8;
         frame.label = FrmLabel.newLabel(funName);
         FrmDesc.setFrame(funDef, frame);
-
 
     }
     @Override
