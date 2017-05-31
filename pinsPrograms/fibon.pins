@@ -1,22 +1,45 @@
 fun main(i:integer):integer = (
-	putInt(i),
+	putInt(fibTo(10)),
+	putInt(fibOf(10)),
+	putInt(fibRek(10)),	
+	0
+);
+
+fun fibTo(limit:integer):integer = (
 	{one = 1},
 	{two = 0},
 	{current = 0},
-	{for i=0, 10, 1:
+	{for j=0, limit, 1:
 		(
 			{ current = one + two },
 			{ one = two },
 			{ two = current },
-			print(current)
+			putInt(current)
 		)
 	},
 	0
-) { where var i:integer; var one:integer; var two:integer; var current:integer };
+) { where var j:integer; var one:integer; var two:integer; var current:integer };
 
-fun print(j:integer):integer = (
-	putInt(j),
-	0
-)
+fun fibOf(limit:integer):integer = (
+	{one = 1},
+	{two = 0},
+	{current = 0},
+	{for j=0, limit, 1:
+		(
+			{ current = one + two },
+			{ one = two },
+			{ two = current }			
+		)
+	},
+	current
+) { where var j:integer; var one:integer; var two:integer; var current:integer };
 
 
+fun fibRek(number:integer):integer = (
+	{
+		if number <= 2
+			then ({result = 1})
+			else ({result = fibRek(number-1) + fibRek(number-2)})
+	},
+	result
+) {where var result:integer}

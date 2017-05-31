@@ -18,8 +18,6 @@ public class Interpreter {
 	/** Pomnilnik navideznega stroja. */
 	public static HashMap<Integer, Object> mems = new HashMap<Integer, Object>();
 
-	/** globalne spremenljivke */
-	public HashMap<String, Integer> heap = new HashMap<String,Integer>();
 
 	public static void stM(Integer address, Object value) {
 		if (debug) System.out.println(" [" + address + "] <= " + value);
@@ -34,7 +32,6 @@ public class Interpreter {
 
 	/** Kazalec na vrh klicnega zapisa. */
 	private static int fp = 1000;
-	private static int hp = 1000;
 
 	/** Kazalec na dno klicnega zapisa. */
 	private static int sp = 1000;
@@ -85,7 +82,8 @@ public class Interpreter {
 		interpret(frame, code);
 	}
 
-	private void interpretFunctionLabel(String funLabel) {
+	public Interpreter(String funLabel, ImcCodeGen imcCodeGen) {
+		this.imcCodeGen = imcCodeGen;
 		FrmFrame frame = null;
 		ImcSEQ code = null;
 
@@ -112,11 +110,6 @@ public class Interpreter {
 				c.lincode = c.imcode.linear();
 				imcCodeGen.chunks.set(i, c);
 			}
-            else if(ch instanceof ImcDataChunk) {
-                ImcDataChunk dataChunk = (ImcDataChunk)ch;
-                heap.put(dataChunk.label.name(), hp);
-				hp = hp + dataChunk.size;
-            }
 		}
 	}
 
@@ -127,9 +120,10 @@ public class Interpreter {
 			System.out.println("[START OF " + frame.label.name() + "]");
 		}
 
-		stM(sp, fp);
+		stM(sp - frame.sizeLocs - 4 , fp);
 		fp = sp;
 		sp = sp - frame.size();
+
 
 		if (debug) {
 			System.out.println("[FP=" + fp + "]");
@@ -163,8 +157,9 @@ public class Interpreter {
 				pc++;
 		}
 
-		fp = (Integer) ldM(fp);
 		sp = sp + frame.size();
+		fp = (Integer) ldM(sp - frame.sizeLocs - 4 );
+
 		if (debug) {
 			System.out.println("[FP=" + fp + "]");
 			System.out.println("[SP=" + sp + "]");
@@ -237,7 +232,8 @@ public class Interpreter {
 				stM(sp + offset, execute(arg));
 				offset += 4;
 			}
-			if (instr.label.name().equals("_putInt")) { System.out.println((Integer) ldM(sp + 4));
+			if (instr.label.name().equals("_putInt")) {
+				System.out.println((Integer) ldM(sp + 4));
 				return null;
 			}
 			if (instr.label.name().equals("_getInt")) {
@@ -254,9 +250,10 @@ public class Interpreter {
 				stM((Integer) ldM (sp + 4),scanner.next());
 				return null;
 			}
-			interpretFunctionLabel(instr.label.name());
 
-			return null;
+			new Interpreter(instr.label.name(), this.imcCodeGen);
+
+			return ldM(sp);
 		}
 
 		if (instruction instanceof ImcCJUMP) {
@@ -316,7 +313,6 @@ public class Interpreter {
 			if (instrLabel.equals("FP")) return fp;
 			if (instrLabel.equals("SP")) return sp;
 
-			return heap.get(instrLabel);
 		}
 
 		if (instruction instanceof ImcTEMP) {
