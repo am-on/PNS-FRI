@@ -13,6 +13,8 @@ public class Interpreter {
 
 	public static boolean debug = false;
 
+	private String defaultFunction = "main";
+
 	/*--- staticni del navideznega stroja ---*/
 
 	/** Pomnilnik navideznega stroja. */
@@ -59,7 +61,9 @@ public class Interpreter {
 
 		linearizator(imcCodeGen);
 
-		String defaultFunction = "main";
+		// set argument of main function to 0
+		stM(fp+4, 0);
+
 
 		interpretFunctionName(defaultFunction);
 	}
@@ -132,13 +136,6 @@ public class Interpreter {
 
 		stT(frame.FP, fp);
 
-
-
-		// set argument of main function to 0
-		if(frame.fun.name.equals("main")){
-			stM(fp+4, 0);
-		}
-
 		int pc = 0;
 		Object result = null;
 		while (pc < code.stmts.size()) {
@@ -179,47 +176,39 @@ public class Interpreter {
 
 		if (instruction instanceof ImcBINOP) {
 			ImcBINOP instr = (ImcBINOP) instruction;
+
+			// get values of left and right part of instruction
 			Object fstSubValue = execute(instr.limc);
 			Object sndSubValue = execute(instr.rimc);
+
+			// calculate instruction left op right, depending on op type
 			switch (instr.op) {
 				case ImcBINOP.OR:
-					return ((((Integer) fstSubValue).intValue() != 0) || (((Integer) sndSubValue).intValue() != 0) ? 1 : 0);
+					return (((Integer) fstSubValue != 0) || ((Integer) sndSubValue != 0) ? 1 : 0);
 				case ImcBINOP.AND:
-					return ((((Integer) fstSubValue).intValue() != 0) && (((Integer) sndSubValue).intValue() != 0) ? 1 : 0);
+					return (((Integer) fstSubValue != 0) && ((Integer) sndSubValue != 0) ? 1 : 0);
 				case ImcBINOP.EQU:
 					return (((Integer) fstSubValue).intValue() == ((Integer) sndSubValue).intValue() ? 1 : 0);
 				case ImcBINOP.NEQ:
 					return (((Integer) fstSubValue).intValue() != ((Integer) sndSubValue).intValue() ? 1 : 0);
 				case ImcBINOP.LTH:
-					return (((Integer) fstSubValue).intValue() < ((Integer) sndSubValue).intValue() ? 1 : 0);
+					return ((Integer) fstSubValue < (Integer) sndSubValue ? 1 : 0);
 				case ImcBINOP.GTH:
-					return (((Integer) fstSubValue).intValue() > ((Integer) sndSubValue).intValue() ? 1 : 0);
+					return ((Integer) fstSubValue > (Integer) sndSubValue ? 1 : 0);
 				case ImcBINOP.LEQ:
-					return (((Integer) fstSubValue).intValue() <= ((Integer) sndSubValue).intValue() ? 1 : 0);
+					return ((Integer) fstSubValue <= (Integer) sndSubValue ? 1 : 0);
 				case ImcBINOP.GEQ:
-					return (((Integer) fstSubValue).intValue() >= ((Integer) sndSubValue).intValue() ? 1 : 0);
+					return ((Integer) fstSubValue >= (Integer) sndSubValue ? 1 : 0);
 				case ImcBINOP.ADD:
-					return (((Integer) fstSubValue).intValue() + ((Integer) sndSubValue).intValue());
+					return ((Integer) fstSubValue + (Integer) sndSubValue);
 				case ImcBINOP.SUB:
-					return (((Integer) fstSubValue).intValue() - ((Integer) sndSubValue).intValue());
+					return ((Integer) fstSubValue - (Integer) sndSubValue);
 				case ImcBINOP.MUL:
-					return (((Integer) fstSubValue).intValue() * ((Integer) sndSubValue).intValue());
+					return ((Integer) fstSubValue * (Integer) sndSubValue);
 				case ImcBINOP.DIV:
-					return (((Integer) fstSubValue).intValue() / ((Integer) sndSubValue).intValue());
+					return ((Integer) fstSubValue / (Integer) sndSubValue);
 				case ImcBINOP.MOD:
-					return (((Integer) fstSubValue).intValue() % ((Integer) sndSubValue).intValue());
-//			case ImcBINOP.EQU:
-//				return (((String) fstSubValue).compareTo((String) sndSubValue)) == 0 ? 1 : 0;
-//			case ImcBINOP.NEQ:
-//				return (((String) fstSubValue).compareTo((String) sndSubValue)) != 0 ? 1 : 0;
-//			case ImcBINOP.LTH:
-//				return (((String) fstSubValue).compareTo((String) sndSubValue)) < 0 ? 1 : 0;
-//			case ImcBINOP.GTH:
-//				return (((String) fstSubValue).compareTo((String) sndSubValue)) > 0 ? 1 : 0;
-//			case ImcBINOP.LEQ:
-//				return (((String) fstSubValue).compareTo((String) sndSubValue)) <= 0 ? 1 : 0;
-//			case ImcBINOP.GEQ:
-//				return (((String) fstSubValue).compareTo((String) sndSubValue)) >= 0 ? 1 : 0;
+					return ((Integer) fstSubValue % (Integer) sndSubValue);
 			}
 			Report.error("Internal error.");
 			return null;
@@ -228,32 +217,34 @@ public class Interpreter {
 		if (instruction instanceof ImcCALL) {
 			ImcCALL instr = (ImcCALL) instruction;
 			int offset = 0;
+
+			// store arguments, including static link to location of sp and above
 			for (ImcCode arg : instr.args) {
 				stM(sp + offset, execute(arg));
 				offset += 4;
 			}
+
+			// predefined functions
 			if (instr.label.name().equals("_putInt")) {
 				System.out.println((Integer) ldM(sp + 4));
 				return null;
 			}
+
 			if (instr.label.name().equals("_getInt")) {
 				Scanner scanner = new Scanner(System.in);
 				System.out.print("Enter integer value: ");
+
+				// store entered value to sp
 				stM(sp, scanner.nextInt());
+
+				// read and return result
 				return ldM(sp);
 			}
-//			if (instr.label.name().equals("_putString")) {
-//				System.out.println((String) ldM(sp + 4));
-//				return null;
-//			}
-//			if (instr.label.name().equals("_getString")) {
-//				Scanner scanner = new Scanner(System.in);
-//				stM((Integer) ldM (sp + 4),scanner.next());
-//				return null;
-//			}
 
+			// interpret function
 			new Interpreter(instr.label.name(), this.imcCodeGen);
 
+			// read and return result
 			return ldM(sp);
 		}
 
@@ -261,7 +252,7 @@ public class Interpreter {
 			ImcCJUMP instr = (ImcCJUMP) instruction;
 			Object cond = execute(instr.cond);
 			if (cond instanceof Integer) {
-				if (((Integer) cond).intValue() != 0)
+				if ((Integer) cond != 0)
 					return new ImcLABEL(instr.trueLabel);
 				else
 					return new ImcLABEL(instr.falseLabel);
@@ -271,13 +262,8 @@ public class Interpreter {
 
 		if (instruction instanceof ImcCONST) {
 			ImcCONST instr = (ImcCONST) instruction;
-			return new Integer(instr.value);
+			return instr.value;
 		}
-
-//		if (instruction instanceof ImcCONSTs) {
-//			ImcCONSTs instr = (ImcCONSTs) instruction;
-//			return new String(instr.stringValue);
-//		}
 
 		if (instruction instanceof ImcJUMP) {
 			ImcJUMP instr = (ImcJUMP) instruction;
@@ -320,25 +306,6 @@ public class Interpreter {
 			ImcTEMP instr = (ImcTEMP) instruction;
 			return ldT(instr.temp);
 		}
-
-//		if (instruction instanceof ImcUNOP) {
-//			ImcUNOP instr = (ImcUNOP) instruction;
-//			Object subValue = execute(instr.subExpr);
-//			switch (instr.oper) {
-//			case ImcUNOP.ADDi:
-//				return +(((Integer) subValue).intValue());
-//			case ImcUNOP.SUBi:
-//				return -(((Integer) subValue).intValue());
-//			case ImcUNOP.ADDr:
-//				return +(((Float) subValue).floatValue());
-//			case ImcUNOP.SUBr:
-//				return +(((Float) subValue).floatValue());
-//			case ImcUNOP.NOT:
-//				return (((Integer) subValue).intValue() == 0 ? 1 : 0);
-//			}
-//			Report.error("Internal error.", 1);
-//			return null;
-//		}
 
 		return null;
 	}
