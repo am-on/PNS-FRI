@@ -473,6 +473,10 @@ public class LexAn {
                     }
                 }
             }
+            /** vprasaj */
+            else if (buffer.equals("?")) {
+                s = new Symbol(Token.TENARY, buffer, position);
+            }
             /** neznani simbol */
             else {
                 setPosition(buffer.length());

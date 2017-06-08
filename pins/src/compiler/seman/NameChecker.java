@@ -284,5 +284,12 @@ public class NameChecker implements Visitor {
         acceptor.body.accept(this);
     }
 
+    @Override
+    public void visit(AbsTenary acceptor) {
+        acceptor.exprLog.accept(this);
+        acceptor.expr1.accept(this);
+        acceptor.expr1.accept(this);
+    }
+
 
 }

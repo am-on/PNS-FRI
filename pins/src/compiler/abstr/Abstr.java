@@ -222,5 +222,10 @@ public class Abstr implements Visitor {
 		indent += 2; where.cond.accept(this); indent -= 2;
 		indent += 2; where.body.accept(this); indent -= 2;
 	}
-	
+
+	@Override
+	public void visit(AbsTenary acceptor) {
+
+	}
+
 }

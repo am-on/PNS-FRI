@@ -445,6 +445,48 @@ public class ImcCodeGen implements Visitor {
         imPart.put(acceptor, seq);
     }
 
+    @Override
+    public void visit(AbsTenary acceptor) {
+        acceptor.exprLog.accept(this);
+        acceptor.expr1.accept(this);
+        acceptor.expr2.accept(this);
+
+
+        ImcSEQ seq = new ImcSEQ();
+
+        FrmLabel trueLabel = FrmLabel.newLabel();
+        FrmLabel falseLabel = FrmLabel.newLabel();
+        FrmLabel endLabel = FrmLabel.newLabel();
+
+        // add conditional jump
+        ImcExpr cond = (ImcExpr) imPart.get(acceptor.exprLog);
+        seq.stmts.add(new ImcCJUMP(cond, trueLabel, falseLabel));
+
+        // mark true location
+        seq.stmts.add(new ImcLABEL(trueLabel));
+
+        // add true expression
+        ImcCode trueExpr = imPart.get(acceptor.expr1);
+        addExprStmts(seq, trueExpr);
+
+        // skip false if true was executed
+        seq.stmts.add(new ImcJUMP(endLabel));
+
+        // mark false location
+        seq.stmts.add(new ImcLABEL(falseLabel));
+
+        // add false expression
+        ImcCode elseExpr = imPart.get(acceptor.expr2);
+        addExprStmts(seq, elseExpr);
+
+        // mark end location
+        seq.stmts.add(new ImcLABEL(endLabel));
+
+        imPart.put(acceptor, seq);
+
+
+    }
+
 
     @Override
     public void visit(AbsUnExpr acceptor) {

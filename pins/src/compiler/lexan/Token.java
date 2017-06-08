@@ -60,5 +60,6 @@ public class Token {
 	/** Vrsta simbola: kljucna beseda var.  */						public static final int KW_VAR 		= 40;
 	/** Vrsta simbola: kljucna beseda where.  */					public static final int KW_WHERE 	= 41;
 	/** Vrsta simbola: kljucna beseda while.  */					public static final int KW_WHILE 	= 42;
+	/** vprasaj **/													public static final int TENARY		= 43;
 
 }

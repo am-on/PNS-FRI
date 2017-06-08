@@ -123,6 +123,13 @@ public class FrmEvaluator implements Visitor {
     }
 
     @Override
+    public void visit(AbsTenary acceptor) {
+        acceptor.exprLog.accept(this);
+        acceptor.expr1.accept(this);
+        acceptor.expr2.accept(this);
+    }
+
+    @Override
     public void visit(AbsWhere acceptor) {
         acceptor.expr.accept(this);
         acceptor.defs.accept(this);

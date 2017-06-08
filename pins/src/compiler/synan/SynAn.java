@@ -331,9 +331,10 @@ public class SynAn {
             parseEndSymbol(Token.RBRACE);
 
             return new AbsWhere(p, e, defs);
+        } else {
+            dump("expression' -> ε");
+            return e;
         }
-        dump("expression' -> ε");
-        return e;
     }
 
     /**
@@ -801,16 +802,38 @@ public class SynAn {
 
                 return new AbsFor(p, varName, e1, e2, e3, e4);
             default:
-                dump("atom_expression''' -> expression = expression }");
+
 
                 e1 = parseExpression();
-
                 parseEndSymbol(Token.ASSIGN);
+
 
                 e2 = parseExpression();
                 p = new Position(p, currentPosition());
 
+
+                if (peek() == Token.TENARY) {
+                    parseEndSymbol(Token.TENARY);
+                    dump("atom_expression''' -> expression ? expression : expression }");
+
+                    AbsExpr tValue = parseAtomExpression();
+
+                    parseEndSymbol(Token.COLON);
+
+                    AbsExpr fValue = parseAtomExpression();
+                    p = new Position(p, currentPosition());
+
+                    parseEndSymbol(Token.RBRACE);
+
+                    AbsTenary ate = new AbsTenary(p, e2, tValue, fValue);
+
+                    return new AbsBinExpr(p, AbsBinExpr.ASSIGN, e1, ate);
+                }
+
+
                 parseEndSymbol(Token.RBRACE);
+
+                dump("atom_expression''' -> expression = expression }");
 
                 return new AbsBinExpr(p, AbsBinExpr.ASSIGN, e1, e2);
         }

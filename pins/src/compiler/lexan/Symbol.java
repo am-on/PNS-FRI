@@ -115,6 +115,7 @@ public class Symbol {
 		case Token.KW_VAR    : tokenName = "VAR"       ; break;
 		case Token.KW_WHERE  : tokenName = "WHERE"     ; break;
 		case Token.KW_WHILE  : tokenName = "WHILE"     ; break;
+		case Token.TENARY    : tokenName = "TENARY"     ; break;
 
 		default:
 			Report.error("Internal error: token=" + token + " in compiler.lexan.Symbol.toString().");

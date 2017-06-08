@@ -1,28 +1,5 @@
-typ a : integer;
-typ b : a;
-typ iaa : a;
-typ spremenljivka : a;
-var ime : a;
-var ime2 : b;
-fun funkcija0(i:iaa , j:iaa):integer = 5 > 3;
-fun funkcija2(i:logical):integer = 5 < 3;
-fun funkcija3(i:integer):integer = 5 >= 3;
-fun funkcija(i:logical):integer = 5 <= 3;
-fun funkcija5(i:iaa):integer = c5 == 3;
-fun funkcija6(i:iaa):integer = 5 != a3;
-fun funkcija7(i:iaa):integer = 5 & 3;
-fun funkcija8(i:iaa):integer = 5 | 3;
-
-fun funkcija9 ( parametri :  spremenljivka ) : spremenljivka  = ( spremenljivka { where typ spremenljivka : spremenljivka});
-typ tabela : arr [ 1] arr [ 2] tabela ;
-typ tabelaa : arr [ 1] arr [ 2] tabela ;
-fun funkcija10(x:b):integer = (
-	{ for i=0,i>=x,1 : (a == s)	},
-	{ if 1==1 then 2==2  },
-	{ if 1==1 then 2==2 else 1!=1 },
-	{ 1==1 = 1==1  },
-	{ while +5 : +4 }
-)
-
-
-
+fun main(i:integer):integer = (
+    {r = true ? 44 : ? 5 : 2},
+	putInt(r),
+	0
+) { where var r:integer};

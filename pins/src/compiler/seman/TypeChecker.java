@@ -464,4 +464,33 @@ public class TypeChecker implements Visitor {
         // set void type
         SymbDesc.setType(acceptor, new SemAtomType(3));
     }
+
+    @Override
+    public void visit(AbsTenary acceptor) {
+        acceptor.exprLog.accept(this);
+        acceptor.expr1.accept(this);
+        acceptor.expr2.accept(this);
+
+        SemType exprLog = SymbDesc.getType(acceptor.exprLog);
+        SemType expr1 = SymbDesc.getType(acceptor.expr1);
+        SemType expr2 = SymbDesc.getType(acceptor.expr1);
+
+        if (exprLog.actualType() instanceof SemAtomType) {
+            if (((SemAtomType) exprLog.actualType()).type != 0) {
+                Report.error(acceptor.position, "expected logical");
+            }
+        }
+
+        if (expr1.actualType() instanceof SemAtomType) {
+            if (((SemAtomType) expr1.actualType()).type != 1) {
+                Report.error(acceptor.position, "expected integer");
+            }
+        }
+
+        if (expr2.actualType() instanceof SemAtomType) {
+            if (((SemAtomType) expr2.actualType()).type != 1) {
+                Report.error(acceptor.position, "expected integer");
+            }
+        }
+    }
 }

@@ -31,4 +31,5 @@ public interface Visitor {
 	public void visit(AbsWhere      acceptor);
 	public void visit(AbsWhile      acceptor);
 
+    public void visit(AbsTenary     acceptor);
 }
